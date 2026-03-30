@@ -166,6 +166,15 @@ export default function ShoppingListView({
   );
 }
 
+const checkPopStyle = `
+@keyframes checkPop {
+  0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
+  60%  { transform: scale(1.3) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.check-pop { animation: checkPop 0.22s ease-out both; }
+`;
+
 function ShoppingItem({ item, onToggle, onRemove, onUpdateItem }) {
   const [amountInput, setAmountInput] = useState(String(item.amount));
   const [unitInput, setUnitInput] = useState(item.unit);
@@ -190,35 +199,36 @@ function ShoppingItem({ item, onToggle, onRemove, onUpdateItem }) {
   }
 
   return (
-    <div className="flex items-center gap-3">
-      {/* 正方形チェックボックス（カード外・左） */}
-      <button
-        onClick={() => onToggle(item.id)}
-        className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-colors"
-        style={{
-          backgroundColor: item.checked ? "#2d5016" : "#ffffff",
-          border: item.checked ? "2px solid #2d5016" : "2px solid #c0b8b0",
-        }}
-      >
-        {item.checked && (
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3" style={{ color: "#ffffff" }}>
-            <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-          </svg>
-        )}
-      </button>
+    <>
+      <style>{checkPopStyle}</style>
+      <div className="flex items-center gap-3">
+        {/* 正方形チェックボックス（カード外・左） */}
+        <button
+          onClick={() => onToggle(item.id)}
+          className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-colors"
+          style={{
+            backgroundColor: item.checked ? "#2d5016" : "#ffffff",
+            border: item.checked ? "2px solid #2d5016" : "2px solid #c0b8b0",
+          }}
+        >
+          {item.checked && (
+            <svg key="check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 check-pop" style={{ color: "#ffffff" }}>
+              <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+            </svg>
+          )}
+        </button>
 
-      {/* カード本体（FoodCardと同じ構造） */}
-      <div
-        className="flex-1 rounded-2xl overflow-hidden shadow-sm"
-        style={{
-          backgroundColor: "#ffffff",
-          border: "2px solid #e8ddd0",
-          opacity: item.checked ? 0.65 : 1,
-        }}
-      >
-        <div className="px-4 py-3 flex flex-col gap-2">
-          {/* 上段: 食材名（左）＋ Closeボタン（右） — FoodCardと同じ */}
-          <div className="flex items-center gap-2">
+        {/* カード本体: 1行レイアウト（名前中央揃え） */}
+        <div
+          className="flex-1 rounded-2xl overflow-hidden shadow-sm"
+          style={{
+            backgroundColor: "#ffffff",
+            border: "2px solid #e8ddd0",
+            opacity: item.checked ? 0.65 : 1,
+          }}
+        >
+          <div className="px-4 py-3 flex items-center gap-2">
+            {/* 食材名（flex-1で伸び、上下中央） */}
             <span
               className="font-bold text-base flex-1 min-w-0 truncate"
               style={{
@@ -228,19 +238,8 @@ function ShoppingItem({ item, onToggle, onRemove, onUpdateItem }) {
             >
               {item.name}
             </span>
-            <button
-              onClick={() => onRemove(item.id)}
-              className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 hover:opacity-70 active:scale-90"
-              style={{ backgroundColor: "#ffffff", border: "1px solid #e0d8d0" }}
-            >
-              <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
-                <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" stroke="#c0b8b0" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </button>
-          </div>
 
-          {/* 下段: 数量・単位（右寄せ） — FoodCardのbottom-rightと同じ */}
-          <div className="flex items-center justify-end gap-1.5">
+            {/* 数量・単位 */}
             <input
               type="number"
               value={amountInput}
@@ -260,9 +259,20 @@ function ShoppingItem({ item, onToggle, onRemove, onUpdateItem }) {
               className="w-10 h-8 text-center font-medium text-xs rounded-lg border focus:outline-none"
               style={{ backgroundColor: "#f4f4f4", color: "#7a9a62", borderColor: "#d4cbbf" }}
             />
+
+            {/* 閉じるボタン */}
+            <button
+              onClick={() => onRemove(item.id)}
+              className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 hover:opacity-70 active:scale-90"
+              style={{ backgroundColor: "#ffffff", border: "1px solid #e0d8d0" }}
+            >
+              <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" stroke="#c0b8b0" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </button>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

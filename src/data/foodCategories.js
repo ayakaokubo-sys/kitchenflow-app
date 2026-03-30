@@ -122,6 +122,11 @@ export const FOOD_CATEGORIES = [
     label: "肉類",
     emoji: "🥩",
     items: [
+      // 汎用名（AIや手入力で登録されやすい表記）
+      { name: "鶏肉",           emoji: "🍗", unit: "g"    },
+      { name: "豚肉",           emoji: "🥩", unit: "g"    },
+      { name: "牛肉",           emoji: "🥩", unit: "g"    },
+      { name: "ひき肉",         emoji: "🥩", unit: "g"    },
       // 鶏肉
       { name: "鶏むね肉",       emoji: "🍗", unit: "g"    },
       { name: "鶏もも肉",       emoji: "🍗", unit: "g"    },

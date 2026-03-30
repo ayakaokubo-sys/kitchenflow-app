@@ -112,10 +112,16 @@ export default function App() {
   }, [toast]);
 
   // 冷蔵庫CRUD
+  function handleUpdateCategory(id, category) {
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, category } : item))
+    );
+  }
+
   function handleAdd({ name, emoji, unit, quantity, expiryDate }) {
     setItems((prev) => [
       ...prev,
-      { id: nextId++, name, emoji, unit, quantity, expiryDate, registeredAt: new Date().toISOString() },
+      { id: nextId++, name, emoji, unit, quantity, expiryDate, category: getFoodCategory(name), registeredAt: new Date().toISOString() },
     ]);
     setShowModal(false);
     setModalInitialData(null);
@@ -319,6 +325,7 @@ export default function App() {
                             onUpdateExpiry={handleUpdateExpiry}
                             onUpdateName={handleUpdateName}
                             onUpdateUnit={handleUpdateUnit}
+                            onUpdateCategory={handleUpdateCategory}
                             onClose={handleClose}
                           />
                         ))}

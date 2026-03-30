@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { FOOD_CATEGORIES } from "../data/foodCategories";
 
 function calcDaysLeft(expiryDate) {
   const today = new Date();
@@ -29,8 +30,10 @@ function StatusBadge({ daysLeft }) {
   return <span className={base} style={{ ...style, backgroundColor: "rgba(45,80,22,0.08)", borderColor: "rgba(45,80,22,0.2)", color: "#2d5016" }}>あと {daysLeft} 日</span>;
 }
 
+const ALL_CATEGORIES = [...FOOD_CATEGORIES, { label: "その他", emoji: "🍽️" }];
+
 export default function FoodCard({
-  item, onUpdateQuantity, onUpdateExpiry, onUpdateName, onUpdateUnit, onClose,
+  item, onUpdateQuantity, onUpdateExpiry, onUpdateName, onUpdateUnit, onUpdateCategory, onClose,
 }) {
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(item.name);
@@ -132,8 +135,8 @@ export default function FoodCard({
         {/* 下段: バッジ＋日付（左）＋ 数量入力＋単位入力（右） */}
         <div className="flex items-center justify-between gap-2">
 
-          {/* 左: 固定幅バッジ + 日付テキスト */}
-          <div className="flex items-center gap-2 min-w-0">
+          {/* 左: バッジ + 日付 + カテゴリー */}
+          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
             <StatusBadge daysLeft={daysLeft} />
             {editingExpiry ? (
               <input
@@ -155,6 +158,24 @@ export default function FoodCard({
                 {formatExpiryDate(item.expiryDate)}
               </button>
             )}
+            {/* カテゴリー変更セレクター */}
+            <select
+              value={item.category ?? "その他"}
+              onChange={(e) => onUpdateCategory?.(item.id, e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              className="text-xs rounded-lg focus:outline-none"
+              style={{
+                backgroundColor: s.dark ? "rgba(255,255,255,0.12)" : "#f0efee",
+                color: s.dark ? "rgba(255,255,255,0.6)" : "#8a7a65",
+                border: s.dark ? "1px solid rgba(255,255,255,0.2)" : "1px solid #e0d8d0",
+                padding: "1px 4px",
+                maxWidth: "72px",
+              }}
+            >
+              {ALL_CATEGORIES.map((cat) => (
+                <option key={cat.label} value={cat.label}>{cat.emoji} {cat.label}</option>
+              ))}
+            </select>
           </div>
 
           {/* 右: 数量入力 + 単位入力（両方固定幅・直接編集） */}

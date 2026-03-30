@@ -6,10 +6,11 @@ export default function PhotoScanModal({ onAdd, onClose }) {
   const [preview, setPreview] = useState(null);
   const [imageData, setImageData] = useState(null);
   const [scanning, setScanning] = useState(false);
-  const [scanStatus, setScanStatus] = useState("");
   const [results, setResults] = useState(null);
   const [selected, setSelected] = useState(new Set());
-  const [expiryDates, setExpiryDates] = useState({});   // index → YYYY-MM-DD
+  const [expiryDates, setExpiryDates] = useState({});
+  const [quantities, setQuantities] = useState({});
+  const [units, setUnits] = useState({});
   const [error, setError] = useState(null);
   const cameraInputRef = useRef();
   const libraryInputRef = useRef();
@@ -24,6 +25,8 @@ export default function PhotoScanModal({ onAdd, onClose }) {
         setImageData({ base64: compressed.base64, mimeType: "image/jpeg" });
         setResults(null);
         setExpiryDates({});
+        setQuantities({});
+        setUnits({});
         setError(null);
       });
     };
@@ -50,24 +53,25 @@ export default function PhotoScanModal({ onAdd, onClose }) {
   async function handleScan() {
     if (!imageData) return;
     setScanning(true);
-    setScanStatus("scanning");
     setError(null);
     try {
       const items = await scanFoodFromPhoto(imageData.base64, imageData.mimeType);
       setResults(items);
       setSelected(new Set(items.map((_, i) => i)));
-      // 賞味期限を自動計算してセット
       const now = new Date().toISOString();
-      const dates = {};
+      const dates = {}, qtys = {}, us = {};
       items.forEach((item, i) => {
         dates[i] = calcExpiryDate(now, getExpiryDays(item.name));
+        qtys[i] = String(item.quantity ?? 1);
+        us[i] = item.unit ?? "個";
       });
       setExpiryDates(dates);
+      setQuantities(qtys);
+      setUnits(us);
     } catch (e) {
       setError(e.message ?? "不明なエラー");
     } finally {
       setScanning(false);
-      setScanStatus("");
     }
   }
 
@@ -79,18 +83,14 @@ export default function PhotoScanModal({ onAdd, onClose }) {
     });
   }
 
-  function updateExpiry(i, date) {
-    setExpiryDates((prev) => ({ ...prev, [i]: date }));
-  }
-
   function handleAdd() {
     const toAdd = results
       .filter((_, i) => selected.has(i))
       .map((item, i) => ({
         name: item.name,
         emoji: item.emoji || "🍽️",
-        quantity: Number(item.quantity) || 1,
-        unit: item.unit || "個",
+        quantity: parseInt(quantities[i], 10) || 1,
+        unit: units[i] || "個",
         expiryDate: expiryDates[i] ?? calcExpiryDate(new Date().toISOString(), getExpiryDays(item.name)),
       }));
     onAdd(toAdd);
@@ -110,14 +110,14 @@ export default function PhotoScanModal({ onAdd, onClose }) {
       >
         {/* ヘッダー */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
-          <h2 className="text-lg font-black" style={{ color: "#1c1a16" }}>📷 写真で食材を追加</h2>
+          <h2 className="text-lg font-semibold" style={{ color: "#1c1a16" }}>写真で食材を追加</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:opacity-70 active:scale-90"
-            style={{ backgroundColor: "#ede8e0" }}
+            className="w-6 h-6 flex items-center justify-center rounded-full hover:opacity-70 active:scale-90"
+            style={{ backgroundColor: "#ffffff", border: "1px solid #e0d8d0" }}
           >
-            <svg width="10" height="10" viewBox="0 0 8 8" fill="none">
-              <path d="M1 1L7 7M7 1L1 7" stroke="#5a4a35" strokeWidth="1.5" strokeLinecap="round"/>
+            <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+              <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" stroke="#c0b8b0" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
           </button>
         </div>
@@ -125,7 +125,7 @@ export default function PhotoScanModal({ onAdd, onClose }) {
         <div className="px-5 pb-8">
           {noKey && (
             <div className="mb-4 p-3 rounded-xl text-sm" style={{ backgroundColor: "#fff3cd", color: "#856404" }}>
-              ⚠️ VITE_GROQ_API_KEY が未設定です。
+              ⚠️ VITE_GROQ_API_KEY が未設定です。Vercelの環境変数に追加してください。
             </div>
           )}
 
@@ -134,23 +134,35 @@ export default function PhotoScanModal({ onAdd, onClose }) {
 
           {!preview ? (
             <div className="space-y-3">
+              {/* カメラボタン */}
               <button
                 onClick={() => cameraInputRef.current.click()}
                 disabled={noKey}
-                className="w-full py-10 rounded-2xl border-2 border-dashed flex flex-col items-center gap-2 active:scale-95"
-                style={{ borderColor: "#c8b99a", color: "#8a7a65" }}
+                className="w-full py-8 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+                style={{ borderColor: "#c8b99a" }}
               >
-                <span className="text-4xl">📷</span>
-                <span className="font-bold text-sm">カメラで撮影する</span>
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: "#ede8e0" }}
+                >
+                  <span className="text-3xl leading-none">📷</span>
+                </div>
+                <span className="font-semibold text-sm" style={{ color: "#8a7a65" }}>カメラで撮影する</span>
               </button>
+              {/* ライブラリボタン */}
               <button
                 onClick={() => libraryInputRef.current.click()}
                 disabled={noKey}
-                className="w-full py-6 rounded-2xl border-2 border-dashed flex items-center justify-center gap-3 active:scale-95"
-                style={{ borderColor: "#c8b99a", color: "#8a7a65" }}
+                className="w-full py-5 rounded-2xl border-2 border-dashed flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+                style={{ borderColor: "#c8b99a" }}
               >
-                <span className="text-2xl">🖼️</span>
-                <span className="font-bold text-sm">フォトライブラリから選ぶ</span>
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: "#ede8e0" }}
+                >
+                  <span className="text-xl leading-none">🖼️</span>
+                </div>
+                <span className="font-semibold text-sm" style={{ color: "#8a7a65" }}>フォトライブラリから選ぶ</span>
               </button>
             </div>
           ) : (
@@ -160,27 +172,26 @@ export default function PhotoScanModal({ onAdd, onClose }) {
                 <img src={preview} alt="preview" className="w-full object-contain" style={{ maxHeight: 240 }} />
                 <button
                   onClick={() => { setPreview(null); setImageData(null); setResults(null); setError(null); }}
-                  className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center hover:opacity-80 active:scale-90"
+                  className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center hover:opacity-80 active:scale-90"
                   style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
                 >
-                  <svg width="10" height="10" viewBox="0 0 8 8" fill="none">
-                    <path d="M1 1L7 7M7 1L1 7" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round"/>
+                  <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                    <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round"/>
                   </svg>
                 </button>
               </div>
 
               <div className="flex gap-3">
-                <button onClick={() => cameraInputRef.current.click()} className="text-sm font-bold underline" style={{ color: "#2d5016" }}>📷 撮り直す</button>
+                <button onClick={() => cameraInputRef.current.click()} className="text-sm font-semibold underline" style={{ color: "#2d5016" }}>撮り直す</button>
                 <span style={{ color: "#c8b99a" }}>|</span>
-                <button onClick={() => libraryInputRef.current.click()} className="text-sm font-bold underline" style={{ color: "#2d5016" }}>🖼️ ライブラリから選ぶ</button>
+                <button onClick={() => libraryInputRef.current.click()} className="text-sm font-semibold underline" style={{ color: "#2d5016" }}>ライブラリから選ぶ</button>
               </div>
 
-              {/* 認識ボタン */}
               {!results && (
                 <button
                   onClick={handleScan}
                   disabled={scanning || noKey}
-                  className="w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-md active:scale-95 disabled:opacity-50"
+                  className="w-full py-3.5 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 shadow-md active:scale-95 disabled:opacity-50"
                   style={{ backgroundColor: "#2d5016", color: "#ddf0c0" }}
                 >
                   {scanning ? <><span className="inline-block animate-spin">⟳</span> AIが食材を認識中...</> : "🔍 食材を認識する"}
@@ -191,17 +202,16 @@ export default function PhotoScanModal({ onAdd, onClose }) {
                 <div className="p-3 rounded-xl text-sm" style={{ backgroundColor: "#fde8e8", color: "#b91c1c" }}>❌ {error}</div>
               )}
 
-              {/* 認識結果 */}
               {results && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <p className="font-bold text-sm" style={{ color: "#1c1a16" }}>
+                    <p className="font-semibold text-sm" style={{ color: "#1c1a16" }}>
                       {results.length === 0 ? "食材が見つかりませんでした" : `${results.length}品を認識しました`}
                     </p>
                     {results.length > 0 && (
                       <button
                         onClick={() => setSelected(selected.size === results.length ? new Set() : new Set(results.map((_, i) => i)))}
-                        className="text-xs font-bold" style={{ color: "#2d5016" }}
+                        className="text-xs font-semibold" style={{ color: "#2d5016" }}
                       >
                         {selected.size === results.length ? "すべて解除" : "すべて選択"}
                       </button>
@@ -211,7 +221,7 @@ export default function PhotoScanModal({ onAdd, onClose }) {
                   {results.map((item, i) => (
                     <div
                       key={i}
-                      className="rounded-xl transition-colors"
+                      className="rounded-xl"
                       style={{
                         backgroundColor: selected.has(i) ? "#f0f8e8" : "#f5f0ea",
                         border: `1.5px solid ${selected.has(i) ? "#2d5016" : "#e0d5c5"}`,
@@ -225,27 +235,40 @@ export default function PhotoScanModal({ onAdd, onClose }) {
                           onChange={() => toggleSelect(i)}
                           className="w-4 h-4 accent-green-800 shrink-0"
                         />
-                        <span className="text-2xl">{item.emoji}</span>
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-sm truncate" style={{ color: "#1c1a16" }}>{item.name}</p>
-                          <p className="text-xs" style={{ color: "#8a7a65" }}>{item.quantity} {item.unit}</p>
+                          <p className="font-semibold text-sm truncate" style={{ color: "#1c1a16" }}>{item.name}</p>
+                        </div>
+                        {/* 数量・単位（編集可能） */}
+                        <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.preventDefault()}>
+                          <input
+                            type="number"
+                            value={quantities[i] ?? String(item.quantity ?? 1)}
+                            onChange={(e) => setQuantities((prev) => ({ ...prev, [i]: e.target.value }))}
+                            min="1"
+                            className="w-12 h-7 text-center text-xs font-bold rounded-lg border focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                            style={{ backgroundColor: "#f4f4f4", color: "#1c1a16", borderColor: "#d4cbbf" }}
+                          />
+                          <input
+                            type="text"
+                            value={units[i] ?? item.unit ?? "個"}
+                            onChange={(e) => setUnits((prev) => ({ ...prev, [i]: e.target.value }))}
+                            className="w-9 h-7 text-center text-xs rounded-lg border focus:outline-none"
+                            style={{ backgroundColor: "#f4f4f4", color: "#7a9a62", borderColor: "#d4cbbf" }}
+                          />
                         </div>
                       </label>
 
-                      {/* 賞味期限行（チェック時のみ表示） */}
+                      {/* 賞味期限行（チェック時のみ） */}
                       {selected.has(i) && (
                         <div className="flex items-center gap-2 px-3 pb-3">
-                          <span className="text-xs font-bold shrink-0" style={{ color: "#5a4a35" }}>📅 賞味期限</span>
+                          <span className="text-xs font-semibold shrink-0" style={{ color: "#5a4a35" }}>賞味期限</span>
                           <input
                             type="date"
                             value={expiryDates[i] ?? ""}
-                            onChange={(e) => updateExpiry(i, e.target.value)}
-                            className="flex-1 text-xs px-2 py-1 rounded-lg border font-bold"
+                            onChange={(e) => setExpiryDates((prev) => ({ ...prev, [i]: e.target.value }))}
+                            className="flex-1 text-xs px-2 py-1 rounded-lg border"
                             style={{ borderColor: "#c8b99a", color: "#1c1a16", backgroundColor: "#fdf8f2" }}
                           />
-                          <span className="text-xs shrink-0" style={{ color: "#8a7a65" }}>
-                            (自動設定)
-                          </span>
                         </div>
                       )}
                     </div>
@@ -255,13 +278,13 @@ export default function PhotoScanModal({ onAdd, onClose }) {
                     <>
                       <button
                         onClick={handleScan}
-                        className="w-full py-2.5 rounded-xl text-sm font-bold border"
+                        className="w-full py-2.5 rounded-xl text-sm font-semibold border"
                         style={{ borderColor: "#c8b99a", color: "#5a4a35", backgroundColor: "#fdf8f2" }}
                       >🔄 再認識する</button>
                       <button
                         onClick={handleAdd}
                         disabled={selected.size === 0}
-                        className="w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-md active:scale-95 disabled:opacity-40"
+                        className="w-full py-3.5 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 shadow-md active:scale-95 disabled:opacity-40"
                         style={{ backgroundColor: "#2d5016", color: "#ddf0c0" }}
                       >
                         🧊 {selected.size}品を冷蔵庫に追加
