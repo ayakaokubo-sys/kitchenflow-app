@@ -23,24 +23,12 @@ export function getIngredientsToBuy(recipe, fridgeItems) {
 }
 
 /**
- * レシピ詳細ページ（or 検索ページ）のURLを返す
+ * レシピ詳細ページ（クックパッド検索）のURLを返す
  */
 export function getRecipeUrl(recipe) {
+  if (recipe.recipe_url) return recipe.recipe_url;
   const q = encodeURIComponent(recipe.name);
-  switch (recipe.source) {
-    case "ビール女子":
-      return `https://beergirl.net/?s=${q}`;
-    case "サントリー":
-      return `https://recipe.suntory.co.jp/search/?keyword=${q}`;
-    case "キリンレシピノート":
-      return `https://recipe.kirin.co.jp/?s=${q}`;
-    case "サッポロビール":
-      return `https://www.sapporobeer.jp/feature/recipe/#${q}`;
-    case "アサヒビール":
-      return `https://www.asahibeer.co.jp/enjoy/recipe/index.psp.html`;
-    default:
-      return null;
-  }
+  return `https://cookpad.com/search/${q}`;
 }
 
 /**
