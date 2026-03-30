@@ -1,0 +1,409 @@
+import { useState, useEffect } from "react";
+import FoodCard from "./components/FoodCard";
+import AddFoodModal from "./components/AddFoodModal";
+import BottomNav from "./components/BottomNav";
+import ComboPlanner from "./components/ComboPlanner";
+import ShoppingListView from "./components/ShoppingListView";
+import { useShoppingList } from "./hooks/useShoppingList";
+import PhotoScanModal from "./components/PhotoScanModal";
+import { getExpiryDays, calcExpiryDate } from "./data/expiryDays";
+import { FOOD_CATEGORIES, ALL_FOODS } from "./data/foodCategories";
+
+function getFoodCategory(name) {
+  // 1. 完全一致を優先
+  const exact = ALL_FOODS.find((f) => f.name === name);
+  if (exact) return exact.category;
+  // 2. 部分一致 → 最長一致（より具体的なもの）を採用
+  const partials = ALL_FOODS.filter(
+    (f) => name.includes(f.name) || f.name.includes(name)
+  );
+  if (partials.length === 0) return "その他";
+  partials.sort((a, b) => b.name.length - a.name.length);
+  return partials[0].category;
+}
+
+function calcDaysLeft(expiryDate) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const expiry = new Date(expiryDate);
+  expiry.setHours(0, 0, 0, 0);
+  return Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+}
+
+const INITIAL_ITEMS = [
+  {
+    id: 1, name: "卵", emoji: "🥚", unit: "個", quantity: 6,
+    expiryDate: (() => { const d = new Date(); d.setDate(d.getDate() + 2); return d.toISOString().split("T")[0]; })(),
+    registeredAt: new Date().toISOString(),
+  },
+  {
+    id: 2, name: "牛乳", emoji: "🥛", unit: "本", quantity: 2,
+    expiryDate: (() => { const d = new Date(); d.setDate(d.getDate() + 5); return d.toISOString().split("T")[0]; })(),
+    registeredAt: new Date().toISOString(),
+  },
+  {
+    id: 3, name: "鶏肉", emoji: "🍗", unit: "g", quantity: 300,
+    expiryDate: (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })(),
+    registeredAt: new Date().toISOString(),
+  },
+];
+
+let nextId = 10;
+
+const SOURCE_URLS = {
+  "サッポロビール": "https://www.sapporobeer.jp/feature/recipe/",
+  "キリンレシピノート": "https://recipe.kirin.co.jp/",
+  "アサヒビール": "https://www.asahibeer.co.jp/enjoy/recipe/index.psp.html",
+  "サントリー": "https://recipe.suntory.co.jp/",
+  "ビール女子": "https://beergirl.net/category/recipe/",
+};
+
+export default function App() {
+  const [items, setItems] = useState(INITIAL_ITEMS);
+  const [activeTab, setActiveTab] = useState("fridge");
+  const [showModal, setShowModal] = useState(false);
+  const [modalInitialData, setModalInitialData] = useState(null);
+  const [showPhotoScan, setShowPhotoScan] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [showAllFridgeItems, setShowAllFridgeItems] = useState(false);
+
+  const shopping = useShoppingList();
+
+  const [todayMenu, setTodayMenu] = useState([]);
+
+  // 賞味期限が近い順にソート
+  const sortedItems = [...items].sort(
+    (a, b) => calcDaysLeft(a.expiryDate) - calcDaysLeft(b.expiryDate)
+  );
+
+  const warningCount = items.filter((i) => calcDaysLeft(i.expiryDate) <= 3).length;
+  const uncheckedShoppingCount = shopping.items.filter((i) => !i.checked).length;
+
+  // トースト表示
+  function showToast(msg) {
+    setToast(msg);
+  }
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2800);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  // 冷蔵庫CRUD
+  function handleAdd({ name, emoji, unit, quantity, expiryDate }) {
+    setItems((prev) => [
+      ...prev,
+      { id: nextId++, name, emoji, unit, quantity, expiryDate, registeredAt: new Date().toISOString() },
+    ]);
+    setShowModal(false);
+    setModalInitialData(null);
+  }
+
+  // 写真スキャンから複数食材を一括追加
+  function handleAddFromScan(foodList) {
+    const now = new Date().toISOString();
+    setItems((prev) => [
+      ...prev,
+      ...foodList.map((f) => ({ id: nextId++, ...f, registeredAt: now })),
+    ]);
+    setShowPhotoScan(false);
+    showToast(`🧊 ${foodList.length}品を追加しました`);
+  }
+
+  function handleUpdateQuantity(id, delta) {
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item
+      )
+    );
+  }
+
+  function handleUpdateExpiry(id, date) {
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, expiryDate: date } : item))
+    );
+  }
+
+  function handleUpdateEmoji(id, emoji) {
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, emoji } : item))
+    );
+  }
+
+  function handleUpdateName(id, name) {
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, name } : item))
+    );
+  }
+
+  function handleUpdateUnit(id, unit) {
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, unit } : item))
+    );
+  }
+
+  function handleClose(id) {
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  }
+
+  // 献立プラン実行 → 食材消費
+  function handleConsumePlan(usedIngredients) {
+    setItems((prev) => {
+      let next = [...prev];
+      usedIngredients.forEach(({ name, amount, unit }) => {
+        const idx = next.findIndex(
+          (item) =>
+            item.name.includes(name) || name.includes(item.name)
+        );
+        if (idx === -1) return;
+        const item = next[idx];
+        // 単位が一致する場合のみ差し引く
+        if (item.unit === unit) {
+          const newQty = item.quantity - amount;
+          if (newQty <= 0) {
+            next = next.filter((_, i) => i !== idx);
+          } else {
+            next = next.map((it, i) => (i === idx ? { ...it, quantity: newQty } : it));
+          }
+        }
+      });
+      return next;
+    });
+    setActiveTab("fridge");
+  }
+
+  // 買い物リスト → 冷蔵庫登録
+  function handleAddToFridgeFromShopping(shoppingItem) {
+    setModalInitialData({
+      name: shoppingItem.name,
+      amount: shoppingItem.amount,
+      unit: shoppingItem.unit,
+    });
+    setShowModal(true);
+    setActiveTab("fridge");
+  }
+
+  // 今日の献立 追加
+  function handleAddToToday(newMenuItems) {
+    setTodayMenu((prev) => {
+      const existing = new Set(prev.map((r) => r.name));
+      return [...prev, ...newMenuItems.filter((r) => !existing.has(r.name))];
+    });
+  }
+
+  // 今日の献立 削除
+  function handleRemoveFromTodayMenu(name) {
+    setTodayMenu((prev) => prev.filter((r) => r.name !== name));
+  }
+
+  // 「食べた」→ そのレシピのキーワードに一致する冷蔵庫食材を消費
+  function handleEatRecipe(recipe) {
+    const keywords = recipe.keywords ?? [];
+    if (keywords.length > 0) {
+      setItems((prev) =>
+        prev.filter(
+          (item) => !keywords.some((kw) => item.name.includes(kw) || kw.includes(item.name))
+        )
+      );
+    }
+    setTodayMenu((prev) => prev.filter((r) => r.name !== recipe.name));
+    showToast("🍽️ 冷蔵庫から食材を削除しました");
+  }
+
+  // 購入済みアイテムを一括で冷蔵庫に追加
+  function handleAddAllCheckedToFridge(checkedItems) {
+    if (checkedItems.length === 0) return;
+    const now = new Date().toISOString();
+    const newItems = checkedItems.map((si) => ({
+      id: nextId++,
+      name: si.name,
+      emoji: "🍱",
+      unit: si.unit,
+      quantity: si.amount,
+      expiryDate: calcExpiryDate(now, getExpiryDays(si.name)),
+      registeredAt: now,
+    }));
+    setItems((prev) => [...prev, ...newItems]);
+    shopping.clearChecked();
+    showToast(`🧊 ${newItems.length}品を冷蔵庫に追加しました`);
+    setActiveTab("fridge");
+  }
+
+  // モーダルを閉じる
+  function handleCloseModal() {
+    setShowModal(false);
+    setModalInitialData(null);
+  }
+
+  return (
+    <div className="min-h-screen pb-20" style={{ backgroundColor: "#f5ede0" }}>
+      {/* ヘッダー */}
+      <header className="sticky top-0 z-40 backdrop-blur border-b shadow-sm" style={{ backgroundColor: "rgba(245,237,224,0.92)", borderColor: "#e8d9c4" }}>
+        <div className="max-w-lg mx-auto px-5 py-4 flex items-center justify-center">
+          <h1 className="text-xl font-black leading-tight tracking-tight" style={{ color: "#1c1a16" }}>Kitchenflow</h1>
+        </div>
+      </header>
+
+      {/* メインコンテンツ */}
+      <main>
+        {/* 冷蔵庫タブ */}
+        {activeTab === "fridge" && (
+          <div className="max-w-lg mx-auto px-4 py-6">
+            <div className="flex gap-2 mb-5">
+              <button
+                onClick={() => setShowModal(true)}
+                className="flex-1 font-bold py-3 rounded-2xl text-sm transition-all shadow-md flex items-center justify-center gap-1.5 active:scale-95"
+                style={{ backgroundColor: "#2d5016", color: "#ddf0c0" }}
+              >
+                <span className="text-base leading-none font-black">＋</span>
+                <span>食材を追加</span>
+              </button>
+              <button
+                onClick={() => setShowPhotoScan(true)}
+                className="w-12 h-12 rounded-full font-black text-base transition-all shadow-md flex items-center justify-center active:scale-95 flex-shrink-0"
+                style={{ backgroundColor: "#ffffff", border: "1.5px solid #c0b8b0", color: "#2d5016" }}
+                title="写真から食材を追加"
+              >
+                📷
+              </button>
+            </div>
+            {sortedItems.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-5xl mb-4">🍽️</p>
+                <p className="text-gray-400 font-medium">食材が登録されていません</p>
+                <p className="text-gray-300 text-sm mt-1">「＋ 追加」から食材を登録しましょう</p>
+              </div>
+            ) : (() => {
+              const urgentItems = sortedItems.filter((i) => calcDaysLeft(i.expiryDate) <= 3);
+              const otherItems  = sortedItems.filter((i) => calcDaysLeft(i.expiryDate) >  3);
+              const displayItems = showAllFridgeItems ? sortedItems : urgentItems;
+
+              const renderGroup = (itemList) => {
+                const allCats = [...FOOD_CATEGORIES, { label: "その他", emoji: "🍽️" }];
+                return allCats.map((cat) => {
+                  const catItems = itemList.filter((i) => getFoodCategory(i.name) === cat.label);
+                  if (catItems.length === 0) return null;
+                  return (
+                    <div key={cat.label}>
+                      <p className="text-xs font-semibold mb-2" style={{ color: "#8a7a65" }}>
+                        {cat.emoji} {cat.label}
+                      </p>
+                      <div className="flex flex-col gap-3">
+                        {catItems.map((item) => (
+                          <FoodCard
+                            key={item.id}
+                            item={item}
+                            onUpdateQuantity={handleUpdateQuantity}
+                            onUpdateExpiry={handleUpdateExpiry}
+                            onUpdateName={handleUpdateName}
+                            onUpdateUnit={handleUpdateUnit}
+                            onClose={handleClose}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                });
+              };
+
+              return (
+                <div className="flex flex-col gap-5">
+                  {urgentItems.length === 0 && !showAllFridgeItems && (
+                    <p className="text-sm text-center py-4" style={{ color: "#9a8a78" }}>
+                      期限が迫っている食材はありません
+                    </p>
+                  )}
+                  {renderGroup(displayItems)}
+
+                  {/* 展開・折りたたみボタン */}
+                  {otherItems.length > 0 && (
+                    <button
+                      onClick={() => setShowAllFridgeItems((v) => !v)}
+                      className="w-full py-2.5 rounded-2xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                      style={{ backgroundColor: "#ede8e0", color: "#5a4a35" }}
+                    >
+                      {showAllFridgeItems ? (
+                        <>折りたたむ <span style={{ fontSize: "10px" }}>▲</span></>
+                      ) : (
+                        <>他に {otherItems.length} 品の食材 <span style={{ fontSize: "10px" }}>▼</span></>
+                      )}
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* 献立プランタブ */}
+        {activeTab === "planner" && (
+          <ComboPlanner
+            fridgeItems={sortedItems}
+            todayMenu={todayMenu}
+            onAddToToday={handleAddToToday}
+            onRemoveFromToday={handleRemoveFromTodayMenu}
+            onAddToShoppingList={shopping.addItems}
+            onEatRecipe={handleEatRecipe}
+            onShowToast={showToast}
+          />
+        )}
+
+        {/* 買い物リストタブ */}
+        {activeTab === "shopping" && (
+          <ShoppingListView
+            items={shopping.items}
+            onToggle={shopping.toggleItem}
+            onRemove={shopping.removeItem}
+            onUpdateItem={shopping.updateItem}
+            onClearChecked={shopping.clearChecked}
+            onAddItem={(item) => shopping.addItem(item)}
+            onAddToFridge={handleAddToFridgeFromShopping}
+            onAddAllCheckedToFridge={handleAddAllCheckedToFridge}
+          />
+        )}
+      </main>
+
+      {/* ボトムナビ */}
+      <BottomNav
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        shoppingCount={uncheckedShoppingCount}
+      />
+
+      {/* 写真スキャンモーダル */}
+      {showPhotoScan && (
+        <PhotoScanModal
+          onAdd={handleAddFromScan}
+          onClose={() => setShowPhotoScan(false)}
+        />
+      )}
+
+      {/* 食材追加モーダル */}
+      {showModal && (
+        <AddFoodModal
+          onAdd={handleAdd}
+          onClose={handleCloseModal}
+          initialData={modalInitialData}
+        />
+      )}
+
+      {/* トースト通知 */}
+      {toast && (
+        <div
+          key={toast}
+          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 text-white text-sm font-bold px-6 py-3 rounded-2xl shadow-2xl whitespace-nowrap"
+          style={{ backgroundColor: "#2d5016", animation: "fadeInUp 0.25s ease-out" }}
+        >
+          {toast}
+        </div>
+      )}
+
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translate(-50%, 12px); }
+          to   { opacity: 1; transform: translate(-50%, 0); }
+        }
+      `}</style>
+    </div>
+  );
+}

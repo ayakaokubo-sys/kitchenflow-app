@@ -1,0 +1,268 @@
+import { useState } from "react";
+
+export default function ShoppingListView({
+  items, onToggle, onRemove, onUpdateItem, onClearChecked, onAddItem, onAddToFridge, onAddAllCheckedToFridge,
+}) {
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newAmount, setNewAmount] = useState(1);
+  const [newUnit, setNewUnit] = useState("個");
+  const [showChecked, setShowChecked] = useState(false);
+
+  const unchecked = items.filter((i) => !i.checked);
+  const checked   = items.filter((i) => i.checked);
+
+  function handleAddSubmit(e) {
+    e.preventDefault();
+    if (!newName.trim()) return;
+    onAddItem({ name: newName.trim(), amount: newAmount, unit: newUnit });
+    setNewName("");
+    setNewAmount(1);
+    setNewUnit("個");
+    setShowAddForm(false);
+  }
+
+  return (
+    <div className="max-w-lg mx-auto px-4 py-6 flex flex-col gap-4">
+      {/* ツールバー */}
+      <div className="flex items-center justify-between">
+        <p className="font-semibold text-base" style={{ color: "#1c1a16" }}>
+          買い物リスト
+          {unchecked.length > 0 && (
+            <span className="ml-2 text-sm font-normal" style={{ color: "#9a8a78" }}>
+              {unchecked.length} 件
+            </span>
+          )}
+        </p>
+        <button
+          onClick={() => setShowAddForm((v) => !v)}
+          className="font-semibold text-xs px-3 py-2 rounded-xl flex items-center gap-1 active:scale-95 transition-all"
+          style={{ backgroundColor: "#2d5016", color: "#ddf0c0" }}
+        >
+          <span>＋</span> 手動追加
+        </button>
+      </div>
+
+      {/* 手動追加フォーム */}
+      {showAddForm && (
+        <form
+          onSubmit={handleAddSubmit}
+          className="rounded-2xl shadow-sm p-4 flex flex-col gap-3"
+          style={{ backgroundColor: "#ffffff", border: "2px solid #e8ddd0" }}
+        >
+          <p className="text-xs font-semibold" style={{ color: "#8a7a65" }}>食材を追加</p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="食材名"
+              autoFocus
+              className="flex-1 rounded-xl px-3 py-2 text-sm focus:outline-none border"
+              style={{ borderColor: "#d4cbbf", backgroundColor: "#f4f4f4", color: "#1c1a16" }}
+            />
+            <input
+              type="number"
+              value={newAmount}
+              onChange={(e) => setNewAmount(Number(e.target.value))}
+              min={1}
+              className="w-14 h-9 text-center font-bold text-sm rounded-xl border focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              style={{ backgroundColor: "#f4f4f4", color: "#1c1a16", borderColor: "#d4cbbf" }}
+            />
+            <input
+              type="text"
+              value={newUnit}
+              onChange={(e) => setNewUnit(e.target.value)}
+              placeholder="単位"
+              className="w-12 h-9 text-center font-medium text-xs rounded-xl border focus:outline-none"
+              style={{ backgroundColor: "#f4f4f4", color: "#7a9a62", borderColor: "#d4cbbf" }}
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              className="flex-1 font-semibold py-2 rounded-xl text-sm transition-colors"
+              style={{ backgroundColor: "#2d5016", color: "#ddf0c0" }}
+            >
+              追加
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowAddForm(false)}
+              className="px-4 py-2 rounded-xl text-sm border hover:opacity-70 transition-colors"
+              style={{ color: "#8a7a65", borderColor: "#d4cbbf" }}
+            >
+              キャンセル
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* 未購入リスト */}
+      {unchecked.length === 0 && checked.length === 0 ? (
+        <div className="text-center py-20">
+          <p className="text-5xl mb-3">🛒</p>
+          <p className="font-medium" style={{ color: "#9a8a78" }}>買い物リストは空です</p>
+          <p className="text-sm mt-1" style={{ color: "#b0a090" }}>献立プランから自動追加、または手動で追加できます</p>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-col gap-3">
+            {unchecked.map((item) => (
+              <ShoppingItem
+                key={item.id}
+                item={item}
+                onToggle={onToggle}
+                onRemove={onRemove}
+                onUpdateItem={onUpdateItem}
+              />
+            ))}
+          </div>
+
+          {/* 購入済みセクション */}
+          {checked.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between py-2">
+                <button
+                  onClick={() => setShowChecked((v) => !v)}
+                  className="flex items-center gap-1.5 text-xs font-semibold hover:opacity-70 transition-opacity"
+                  style={{ color: "#9a8a78" }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                    className={`w-4 h-4 transition-transform ${showChecked ? "rotate-180" : ""}`}
+                  >
+                    <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                  </svg>
+                  購入済み（{checked.length}件）
+                </button>
+                <button
+                  onClick={() => onAddAllCheckedToFridge?.(checked)}
+                  className="text-xs font-semibold px-3 py-1.5 rounded-xl active:scale-95 transition-all"
+                  style={{ backgroundColor: "rgba(45,80,22,0.08)", color: "#2d5016", border: "1px solid rgba(45,80,22,0.2)" }}
+                >
+                  🧊 食材を冷蔵庫へ
+                </button>
+              </div>
+
+              {showChecked && (
+                <div className="flex flex-col gap-3 opacity-60">
+                  {checked.map((item) => (
+                    <ShoppingItem
+                      key={item.id}
+                      item={item}
+                      onToggle={onToggle}
+                      onRemove={onRemove}
+                      onUpdateItem={onUpdateItem}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function ShoppingItem({ item, onToggle, onRemove, onUpdateItem }) {
+  const [amountInput, setAmountInput] = useState(String(item.amount));
+  const [unitInput, setUnitInput] = useState(item.unit);
+
+  function handleAmountBlur() {
+    const n = parseInt(amountInput, 10);
+    if (!isNaN(n) && n >= 1) {
+      onUpdateItem?.(item.id, { amount: n });
+      setAmountInput(String(n));
+    } else {
+      setAmountInput(String(item.amount));
+    }
+  }
+
+  function handleUnitBlur() {
+    const val = unitInput.trim();
+    if (val) {
+      onUpdateItem?.(item.id, { unit: val });
+    } else {
+      setUnitInput(item.unit);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      {/* 正方形チェックボックス（カード外・左） */}
+      <button
+        onClick={() => onToggle(item.id)}
+        className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-colors"
+        style={{
+          backgroundColor: item.checked ? "#2d5016" : "#ffffff",
+          border: item.checked ? "2px solid #2d5016" : "2px solid #c0b8b0",
+        }}
+      >
+        {item.checked && (
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3" style={{ color: "#ffffff" }}>
+            <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+          </svg>
+        )}
+      </button>
+
+      {/* カード本体（FoodCardと同じ構造） */}
+      <div
+        className="flex-1 rounded-2xl overflow-hidden shadow-sm"
+        style={{
+          backgroundColor: "#ffffff",
+          border: "2px solid #e8ddd0",
+          opacity: item.checked ? 0.65 : 1,
+        }}
+      >
+        <div className="px-4 py-3 flex flex-col gap-2">
+          {/* 上段: 食材名（左）＋ Closeボタン（右） — FoodCardと同じ */}
+          <div className="flex items-center gap-2">
+            <span
+              className="font-bold text-base flex-1 min-w-0 truncate"
+              style={{
+                color: item.checked ? "#9a8a78" : "#1c1a16",
+                textDecoration: item.checked ? "line-through" : "none",
+              }}
+            >
+              {item.name}
+            </span>
+            <button
+              onClick={() => onRemove(item.id)}
+              className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 hover:opacity-70 active:scale-90"
+              style={{ backgroundColor: "#ffffff", border: "1px solid #e0d8d0" }}
+            >
+              <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" stroke="#c0b8b0" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </button>
+          </div>
+
+          {/* 下段: 数量・単位（右寄せ） — FoodCardのbottom-rightと同じ */}
+          <div className="flex items-center justify-end gap-1.5">
+            <input
+              type="number"
+              value={amountInput}
+              onChange={(e) => setAmountInput(e.target.value)}
+              onBlur={handleAmountBlur}
+              onKeyDown={(e) => e.key === "Enter" && e.target.blur()}
+              min="1"
+              className="w-14 h-8 text-center font-bold text-sm rounded-lg border focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              style={{ backgroundColor: "#f4f4f4", color: "#1c1a16", borderColor: "#d4cbbf" }}
+            />
+            <input
+              type="text"
+              value={unitInput}
+              onChange={(e) => setUnitInput(e.target.value)}
+              onBlur={handleUnitBlur}
+              onKeyDown={(e) => e.key === "Enter" && e.target.blur()}
+              className="w-10 h-8 text-center font-medium text-xs rounded-lg border focus:outline-none"
+              style={{ backgroundColor: "#f4f4f4", color: "#7a9a62", borderColor: "#d4cbbf" }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
