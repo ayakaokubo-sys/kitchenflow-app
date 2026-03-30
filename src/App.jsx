@@ -48,7 +48,16 @@ const INITIAL_ITEMS = [
   },
 ];
 
-let nextId = 10;
+let nextId = (() => {
+  try {
+    const saved = localStorage.getItem("freshkeep_fridge_items");
+    if (saved) {
+      const items = JSON.parse(saved);
+      if (items.length > 0) return Math.max(...items.map((i) => i.id)) + 1;
+    }
+  } catch {}
+  return 10;
+})();
 
 const SOURCE_URLS = {
   "サッポロビール": "https://www.sapporobeer.jp/feature/recipe/",
@@ -59,13 +68,26 @@ const SOURCE_URLS = {
 };
 
 export default function App() {
-  const [items, setItems] = useState(INITIAL_ITEMS);
+  const [items, setItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem("freshkeep_fridge_items");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return INITIAL_ITEMS;
+  });
   const [activeTab, setActiveTab] = useState("fridge");
   const [showModal, setShowModal] = useState(false);
   const [modalInitialData, setModalInitialData] = useState(null);
   const [showPhotoScan, setShowPhotoScan] = useState(false);
   const [toast, setToast] = useState(null);
   const [showAllFridgeItems, setShowAllFridgeItems] = useState(false);
+
+  // 冷蔵庫アイテムをlocalStorageに永続化
+  useEffect(() => {
+    try {
+      localStorage.setItem("freshkeep_fridge_items", JSON.stringify(items));
+    } catch {}
+  }, [items]);
 
   const shopping = useShoppingList();
 
