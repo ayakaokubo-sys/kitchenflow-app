@@ -190,14 +190,23 @@ export default function ComboPlanner({
         </button>
       )}
 
-      {/* レシピカード（横スクロール） */}
+      {/* レシピカード（横スクロール・全幅） */}
       {displayItems && displayItems.length > 0 && (
         <div
           className="flex gap-3 overflow-x-auto pb-2"
-          style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch", alignItems: "stretch" }}
+          style={{
+            scrollbarWidth: "none",
+            WebkitOverflowScrolling: "touch",
+            alignItems: "stretch",
+            marginLeft: "-1rem",
+            marginRight: "-1rem",
+            paddingLeft: "1rem",
+            paddingRight: "1rem",
+            scrollSnapType: "x mandatory",
+          }}
         >
           {displayItems.map((recipe) => (
-            <div key={recipe.id} style={{ width: "230px", flexShrink: 0, display: "flex", height: "300px" }}>
+            <div key={recipe.id} style={{ width: "calc(100vw - 2.5rem)", maxWidth: "480px", flexShrink: 0, display: "flex", height: "300px", scrollSnapAlign: "start" }}>
               <RecipeCard
                 recipe={recipe}
                 fridgeItems={fridgeItems}
