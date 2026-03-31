@@ -9,7 +9,7 @@ function setCache(cache) {
 }
 
 /**
- * 料理名からGeminiで本格的な料理写真風画像を生成してbase64 data URLを返す。
+ * 料理名からGeminiで料理写真風画像を生成してbase64 data URLを返す。
  * localStorageにキャッシュされるので同じ料理は1度しか生成しない。
  */
 export async function generateRecipeImage(recipeName) {
@@ -27,26 +27,30 @@ export async function generateRecipeImage(recipeName) {
         body: JSON.stringify({
           contents: [{
             parts: [{
-              text: `Professional food photography of Japanese dish "${recipeName}".
-Beautifully plated, soft natural lighting, close-up appetizing shot.
-Warm earthy tones, restaurant quality presentation.
-No text, no watermarks, no borders.`,
+              text: `Generate a professional food photo of "${recipeName}", a Japanese home-cooked dish. Beautifully plated, appetizing, warm natural lighting, close-up shot.`,
             }],
           }],
-          generationConfig: { responseModalities: ["IMAGE"] },
+          generationConfig: { responseModalities: ["TEXT", "IMAGE"] },
         }),
       }
     );
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.warn("Gemini recipe image error:", res.status, await res.text());
+      return null;
+    }
     const data = await res.json();
     const part = data.candidates?.[0]?.content?.parts?.find((p) => p.inlineData);
-    if (!part) return null;
+    if (!part) {
+      console.warn("Gemini recipe image: no image part in response", JSON.stringify(data).slice(0, 300));
+      return null;
+    }
 
     const dataUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
     setCache({ ...getCache(), [recipeName]: dataUrl });
     return dataUrl;
-  } catch {
+  } catch (e) {
+    console.warn("Gemini recipe image exception:", e.message);
     return null;
   }
 }
