@@ -81,6 +81,16 @@ export default function App() {
   const [showPhotoScan, setShowPhotoScan] = useState(false);
   const [toast, setToast] = useState(null);
   const [showAllFridgeItems, setShowAllFridgeItems] = useState(false);
+  const [customCategories, setCustomCategories] = useState(() => {
+    try {
+      const saved = localStorage.getItem("freshkeep_custom_categories");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+  const [showNewCatInput, setShowNewCatInput] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [dragOverCatId, setDragOverCatId] = useState(null);
 
   // 冷蔵庫アイテムをlocalStorageに永続化
   useEffect(() => {
@@ -88,6 +98,13 @@ export default function App() {
       localStorage.setItem("freshkeep_fridge_items", JSON.stringify(items));
     } catch {}
   }, [items]);
+
+  // カスタムカテゴリーを永続化
+  useEffect(() => {
+    try {
+      localStorage.setItem("freshkeep_custom_categories", JSON.stringify(customCategories));
+    } catch {}
+  }, [customCategories]);
 
   const shopping = useShoppingList();
 
@@ -111,12 +128,27 @@ export default function App() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  // 冷蔵庫CRUD
-  function handleUpdateCategory(id, category) {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, category } : item))
-    );
+  // カスタムカテゴリー管理
+  function handleAddCustomCategory() {
+    const name = newCatName.trim();
+    if (!name) return;
+    setCustomCategories((prev) => [...prev, { id: Date.now(), name }]);
+    setNewCatName("");
+    setShowNewCatInput(false);
   }
+  function handleDeleteCustomCategory(catId) {
+    setCustomCategories((prev) => prev.filter((c) => c.id !== catId));
+    setItems((prev) => prev.map((item) =>
+      item.customCategoryId === catId ? { ...item, customCategoryId: null } : item
+    ));
+  }
+  function handleDropToCategory(itemId, catId) {
+    setItems((prev) => prev.map((item) =>
+      item.id === itemId ? { ...item, customCategoryId: catId ?? null } : item
+    ));
+  }
+
+  // 冷蔵庫CRUD
 
   function handleAdd({ name, emoji, unit, quantity, expiryDate }) {
     setItems((prev) => [
@@ -277,7 +309,8 @@ export default function App() {
         {/* 冷蔵庫タブ */}
         {activeTab === "fridge" && (
           <div className="max-w-lg mx-auto px-4 py-6">
-            <div className="flex gap-2 mb-5">
+            {/* 食材を追加ボタン群 */}
+            <div className="flex gap-2 mb-3">
               <button
                 onClick={() => setShowModal(true)}
                 className="flex-1 font-bold py-3 rounded-2xl text-sm transition-all shadow-md flex items-center justify-center gap-1.5 active:scale-95"
@@ -295,16 +328,103 @@ export default function App() {
                 📷
               </button>
             </div>
-            {sortedItems.length === 0 ? (
-              <div className="text-center py-20">
-                <p className="text-5xl mb-4">🍽️</p>
-                <p className="text-gray-400 font-medium">食材が登録されていません</p>
-                <p className="text-gray-300 text-sm mt-1">「＋ 追加」から食材を登録しましょう</p>
+
+            {/* カテゴリーを追加 */}
+            {showNewCatInput ? (
+              <div className="flex gap-2 mb-4">
+                <input
+                  type="text"
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleAddCustomCategory(); if (e.key === "Escape") { setShowNewCatInput(false); setNewCatName(""); } }}
+                  placeholder="カテゴリー名を入力"
+                  autoFocus
+                  className="flex-1 rounded-xl px-3 py-2 text-sm border focus:outline-none"
+                  style={{ borderColor: "#d4cbbf", backgroundColor: "#f4f4f4", color: "#1c1a16" }}
+                />
+                <button
+                  onClick={handleAddCustomCategory}
+                  className="px-4 py-2 rounded-xl text-sm font-semibold active:scale-95"
+                  style={{ backgroundColor: "#2d5016", color: "#ddf0c0" }}
+                >追加</button>
+                <button
+                  onClick={() => { setShowNewCatInput(false); setNewCatName(""); }}
+                  className="px-3 py-2 rounded-xl text-sm border"
+                  style={{ color: "#8a7a65", borderColor: "#d4cbbf" }}
+                >×</button>
               </div>
-            ) : (() => {
-              const urgentItems = sortedItems.filter((i) => calcDaysLeft(i.expiryDate) <= 3);
-              const otherItems  = sortedItems.filter((i) => calcDaysLeft(i.expiryDate) >  3);
-              const displayItems = showAllFridgeItems ? sortedItems : urgentItems;
+            ) : (
+              <button
+                onClick={() => setShowNewCatInput(true)}
+                className="w-full mb-4 py-2 rounded-xl text-sm font-semibold border-2 border-dashed flex items-center justify-center gap-1.5 hover:opacity-70 active:scale-95 transition-all"
+                style={{ borderColor: "#c8b99a", color: "#8a7a65" }}
+              >
+                <span className="text-base leading-none">＋</span> カテゴリーを追加
+              </button>
+            )}
+
+            {/* カスタムカテゴリーエリア */}
+            {customCategories.map((cat) => {
+              const catItems = sortedItems.filter((i) => i.customCategoryId === cat.id);
+              const isOver = dragOverCatId === cat.id;
+              return (
+                <div
+                  key={cat.id}
+                  className="rounded-2xl p-3 mb-4 transition-colors"
+                  style={{
+                    border: isOver ? "2px dashed #2d5016" : "2px dashed #c8b99a",
+                    backgroundColor: isOver ? "rgba(45,80,22,0.04)" : "transparent",
+                  }}
+                  onDragOver={(e) => { e.preventDefault(); setDragOverCatId(cat.id); }}
+                  onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setDragOverCatId(null); }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const id = parseInt(e.dataTransfer.getData("text/plain"), 10);
+                    if (!isNaN(id)) handleDropToCategory(id, cat.id);
+                    setDragOverCatId(null);
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold" style={{ color: "#5a4a35" }}>{cat.name}</p>
+                    <button
+                      onClick={() => handleDeleteCustomCategory(cat.id)}
+                      className="w-5 h-5 rounded-full flex items-center justify-center hover:opacity-70"
+                      style={{ color: "#c0b0a0" }}
+                    >
+                      <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                        <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                  {catItems.length === 0 ? (
+                    <p className="text-xs text-center py-4" style={{ color: "#b0a090" }}>ここにドラッグ</p>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      {catItems.map((item) => (
+                        <FoodCard
+                          key={item.id}
+                          item={item}
+                          onUpdateQuantity={handleUpdateQuantity}
+                          onUpdateExpiry={handleUpdateExpiry}
+                          onUpdateName={handleUpdateName}
+                          onUpdateUnit={handleUpdateUnit}
+                          onClose={handleClose}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* 標準食材エリア（カスタムカテゴリー未割り当て） */}
+            {(() => {
+              const standardItems = sortedItems.filter((i) => !i.customCategoryId);
+              if (standardItems.length === 0 && customCategories.length > 0) return null;
+
+              const urgentItems = standardItems.filter((i) => calcDaysLeft(i.expiryDate) <= 3);
+              const otherItems  = standardItems.filter((i) => calcDaysLeft(i.expiryDate) >  3);
+              const displayItems = showAllFridgeItems ? standardItems : urgentItems;
 
               const renderGroup = (itemList) => {
                 const allCats = [...FOOD_CATEGORIES, { label: "その他", emoji: "🍽️" }];
@@ -325,7 +445,6 @@ export default function App() {
                             onUpdateExpiry={handleUpdateExpiry}
                             onUpdateName={handleUpdateName}
                             onUpdateUnit={handleUpdateUnit}
-                            onUpdateCategory={handleUpdateCategory}
                             onClose={handleClose}
                           />
                         ))}
@@ -336,27 +455,47 @@ export default function App() {
               };
 
               return (
-                <div className="flex flex-col gap-5">
-                  {urgentItems.length === 0 && !showAllFridgeItems && (
-                    <p className="text-sm text-center py-4" style={{ color: "#9a8a78" }}>
-                      期限が迫っている食材はありません
-                    </p>
-                  )}
-                  {renderGroup(displayItems)}
-
-                  {/* 展開・折りたたみボタン */}
-                  {otherItems.length > 0 && (
-                    <button
-                      onClick={() => setShowAllFridgeItems((v) => !v)}
-                      className="w-full py-2.5 rounded-2xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-95"
-                      style={{ backgroundColor: "#ede8e0", color: "#5a4a35" }}
-                    >
-                      {showAllFridgeItems ? (
-                        <>折りたたむ <span style={{ fontSize: "10px" }}>▲</span></>
-                      ) : (
-                        <>他に {otherItems.length} 品の食材 <span style={{ fontSize: "10px" }}>▼</span></>
+                <div
+                  className="flex flex-col gap-5"
+                  onDragOver={(e) => { e.preventDefault(); setDragOverCatId("standard"); }}
+                  onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setDragOverCatId(null); }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const id = parseInt(e.dataTransfer.getData("text/plain"), 10);
+                    if (!isNaN(id)) handleDropToCategory(id, null);
+                    setDragOverCatId(null);
+                  }}
+                  style={{ outline: dragOverCatId === "standard" ? "2px dashed #c8b99a" : "none", borderRadius: "16px", padding: dragOverCatId === "standard" ? "8px" : "0" }}
+                >
+                  {standardItems.length === 0 ? (
+                    <div className="text-center py-20">
+                      <p className="text-5xl mb-4">🍽️</p>
+                      <p className="text-gray-400 font-medium">食材が登録されていません</p>
+                      <p className="text-gray-300 text-sm mt-1">「＋ 追加」から食材を登録しましょう</p>
+                    </div>
+                  ) : (
+                    <>
+                      {urgentItems.length === 0 && !showAllFridgeItems && (
+                        <p className="text-sm text-center py-4" style={{ color: "#9a8a78" }}>
+                          期限が迫っている食材はありません
+                        </p>
                       )}
-                    </button>
+                      {renderGroup(displayItems)}
+
+                      {otherItems.length > 0 && (
+                        <button
+                          onClick={() => setShowAllFridgeItems((v) => !v)}
+                          className="w-full py-2.5 rounded-2xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                          style={{ backgroundColor: "#ede8e0", color: "#5a4a35" }}
+                        >
+                          {showAllFridgeItems ? (
+                            <>折りたたむ <span style={{ fontSize: "10px" }}>▲</span></>
+                          ) : (
+                            <>他に {otherItems.length} 品の食材 <span style={{ fontSize: "10px" }}>▼</span></>
+                          )}
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               );

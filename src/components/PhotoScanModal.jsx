@@ -85,8 +85,9 @@ export default function PhotoScanModal({ onAdd, onClose }) {
 
   function handleAdd() {
     const toAdd = results
-      .filter((_, i) => selected.has(i))
-      .map((item, i) => ({
+      .map((item, i) => ({ item, i }))
+      .filter(({ i }) => selected.has(i))
+      .map(({ item, i }) => ({
         name: item.name,
         emoji: item.emoji || "🍽️",
         quantity: parseInt(quantities[i], 10) || 1,
@@ -238,36 +239,33 @@ export default function PhotoScanModal({ onAdd, onClose }) {
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm truncate" style={{ color: "#1c1a16" }}>{item.name}</p>
                         </div>
-                        {/* 数量・単位（編集可能） */}
-                        <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.preventDefault()}>
-                          <input
-                            type="number"
-                            value={quantities[i] ?? String(item.quantity ?? 1)}
-                            onChange={(e) => setQuantities((prev) => ({ ...prev, [i]: e.target.value }))}
-                            min="1"
-                            className="w-12 h-7 text-center text-xs font-bold rounded-lg border focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
-                            style={{ backgroundColor: "#f4f4f4", color: "#1c1a16", borderColor: "#d4cbbf" }}
-                          />
-                          <input
-                            type="text"
-                            value={units[i] ?? item.unit ?? "個"}
-                            onChange={(e) => setUnits((prev) => ({ ...prev, [i]: e.target.value }))}
-                            className="w-9 h-7 text-center text-xs rounded-lg border focus:outline-none"
-                            style={{ backgroundColor: "#f4f4f4", color: "#7a9a62", borderColor: "#d4cbbf" }}
-                          />
-                        </div>
                       </label>
 
-                      {/* 賞味期限行（チェック時のみ） */}
+                      {/* 賞味期限・数量・単位行（チェック時のみ） */}
                       {selected.has(i) && (
-                        <div className="flex items-center gap-2 px-3 pb-3">
+                        <div className="flex items-center gap-2 px-3 pb-3" onClick={(e) => e.stopPropagation()}>
                           <span className="text-xs font-semibold shrink-0" style={{ color: "#5a4a35" }}>賞味期限</span>
                           <input
                             type="date"
                             value={expiryDates[i] ?? ""}
                             onChange={(e) => setExpiryDates((prev) => ({ ...prev, [i]: e.target.value }))}
-                            className="flex-1 text-xs px-2 py-1 rounded-lg border"
-                            style={{ borderColor: "#c8b99a", color: "#1c1a16", backgroundColor: "#fdf8f2" }}
+                            className="text-xs px-2 py-1 rounded-lg border focus:outline-none"
+                            style={{ borderColor: "#c8b99a", color: "#1c1a16", backgroundColor: "#fdf8f2", width: "130px", flexShrink: 0 }}
+                          />
+                          <input
+                            type="number"
+                            value={quantities[i] ?? String(item.quantity ?? 1)}
+                            onChange={(e) => setQuantities((prev) => ({ ...prev, [i]: e.target.value }))}
+                            min="1"
+                            className="h-7 text-center text-xs font-bold rounded-lg border focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                            style={{ backgroundColor: "#f4f4f4", color: "#1c1a16", borderColor: "#d4cbbf", width: "44px", flexShrink: 0 }}
+                          />
+                          <input
+                            type="text"
+                            value={units[i] ?? item.unit ?? "個"}
+                            onChange={(e) => setUnits((prev) => ({ ...prev, [i]: e.target.value }))}
+                            className="h-7 text-center text-xs rounded-lg border focus:outline-none"
+                            style={{ backgroundColor: "#f4f4f4", color: "#7a9a62", borderColor: "#d4cbbf", width: "52px", flexShrink: 0 }}
                           />
                         </div>
                       )}

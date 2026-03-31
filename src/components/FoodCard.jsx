@@ -1,5 +1,4 @@
 import { useState, useRef } from "react";
-import { FOOD_CATEGORIES } from "../data/foodCategories";
 
 function calcDaysLeft(expiryDate) {
   const today = new Date();
@@ -30,10 +29,8 @@ function StatusBadge({ daysLeft }) {
   return <span className={base} style={{ ...style, backgroundColor: "rgba(45,80,22,0.08)", borderColor: "rgba(45,80,22,0.2)", color: "#2d5016" }}>あと {daysLeft} 日</span>;
 }
 
-const ALL_CATEGORIES = [...FOOD_CATEGORIES, { label: "その他", emoji: "🍽️" }];
-
 export default function FoodCard({
-  item, onUpdateQuantity, onUpdateExpiry, onUpdateName, onUpdateUnit, onUpdateCategory, onClose,
+  item, onUpdateQuantity, onUpdateExpiry, onUpdateName, onUpdateUnit, onClose,
 }) {
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(item.name);
@@ -82,7 +79,23 @@ export default function FoodCard({
         border: s.border ? `2px solid ${s.border}` : "2px solid #e8ddd0",
       }}
     >
-      <div className="px-4 py-3 flex flex-col gap-2">
+      <div className="flex items-stretch">
+        {/* ドラッグハンドル */}
+        <div
+          draggable="true"
+          onDragStart={(e) => { e.dataTransfer.setData("text/plain", String(item.id)); e.stopPropagation(); }}
+          className="flex items-center justify-center px-2 cursor-grab active:cursor-grabbing select-none flex-shrink-0"
+          style={{ color: s.dark ? "rgba(255,255,255,0.2)" : "#d8cfc6" }}
+          title="ドラッグして移動"
+        >
+          <svg width="8" height="14" viewBox="0 0 8 14" fill="currentColor">
+            <circle cx="2" cy="2" r="1.5"/><circle cx="6" cy="2" r="1.5"/>
+            <circle cx="2" cy="7" r="1.5"/><circle cx="6" cy="7" r="1.5"/>
+            <circle cx="2" cy="12" r="1.5"/><circle cx="6" cy="12" r="1.5"/>
+          </svg>
+        </div>
+
+      <div className="flex-1 pr-4 py-3 flex flex-col gap-2">
 
         {/* 上段: 食材名（左）＋ Closeボタン（右） */}
         <div className="flex items-center gap-2">
@@ -158,24 +171,6 @@ export default function FoodCard({
                 {formatExpiryDate(item.expiryDate)}
               </button>
             )}
-            {/* カテゴリー変更セレクター */}
-            <select
-              value={item.category ?? "その他"}
-              onChange={(e) => onUpdateCategory?.(item.id, e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              className="text-xs rounded-lg focus:outline-none"
-              style={{
-                backgroundColor: s.dark ? "rgba(255,255,255,0.12)" : "#f0efee",
-                color: s.dark ? "rgba(255,255,255,0.6)" : "#8a7a65",
-                border: s.dark ? "1px solid rgba(255,255,255,0.2)" : "1px solid #e0d8d0",
-                padding: "1px 4px",
-                maxWidth: "72px",
-              }}
-            >
-              {ALL_CATEGORIES.map((cat) => (
-                <option key={cat.label} value={cat.label}>{cat.emoji} {cat.label}</option>
-              ))}
-            </select>
           </div>
 
           {/* 右: 数量入力 + 単位入力（両方固定幅・直接編集） */}
@@ -202,6 +197,7 @@ export default function FoodCard({
           </div>
         </div>
 
+      </div>
       </div>
     </div>
   );

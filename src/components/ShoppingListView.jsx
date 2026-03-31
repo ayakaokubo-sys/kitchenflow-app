@@ -178,6 +178,18 @@ const checkPopStyle = `
 function ShoppingItem({ item, onToggle, onRemove, onUpdateItem }) {
   const [amountInput, setAmountInput] = useState(String(item.amount));
   const [unitInput, setUnitInput] = useState(item.unit);
+  const [animatingChecked, setAnimatingChecked] = useState(false);
+
+  function handleCheckboxClick() {
+    if (!item.checked) {
+      setAnimatingChecked(true);
+      setTimeout(() => { setAnimatingChecked(false); onToggle(item.id); }, 300);
+    } else {
+      onToggle(item.id);
+    }
+  }
+
+  const displayChecked = item.checked || animatingChecked;
 
   function handleAmountBlur() {
     const n = parseInt(amountInput, 10);
@@ -204,15 +216,15 @@ function ShoppingItem({ item, onToggle, onRemove, onUpdateItem }) {
       <div className="flex items-center gap-3">
         {/* 正方形チェックボックス（カード外・左） */}
         <button
-          onClick={() => onToggle(item.id)}
+          onClick={handleCheckboxClick}
           className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-colors"
           style={{
-            backgroundColor: item.checked ? "#2d5016" : "#ffffff",
-            border: item.checked ? "2px solid #2d5016" : "2px solid #c0b8b0",
+            backgroundColor: displayChecked ? "#2d5016" : "#ffffff",
+            border: displayChecked ? "2px solid #2d5016" : "2px solid #c0b8b0",
           }}
         >
-          {item.checked && (
-            <svg key="check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 check-pop" style={{ color: "#ffffff" }}>
+          {displayChecked && (
+            <svg key={animatingChecked ? "anim" : "static"} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 check-pop" style={{ color: "#ffffff" }}>
               <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
             </svg>
           )}
@@ -224,7 +236,7 @@ function ShoppingItem({ item, onToggle, onRemove, onUpdateItem }) {
           style={{
             backgroundColor: "#ffffff",
             border: "2px solid #e8ddd0",
-            opacity: item.checked ? 0.65 : 1,
+            opacity: displayChecked ? 0.65 : 1,
           }}
         >
           <div className="px-4 py-3 flex items-center gap-2">
@@ -232,8 +244,8 @@ function ShoppingItem({ item, onToggle, onRemove, onUpdateItem }) {
             <span
               className="font-bold text-base flex-1 min-w-0 truncate"
               style={{
-                color: item.checked ? "#9a8a78" : "#1c1a16",
-                textDecoration: item.checked ? "line-through" : "none",
+                color: displayChecked ? "#9a8a78" : "#1c1a16",
+                textDecoration: displayChecked ? "line-through" : "none",
               }}
             >
               {item.name}
