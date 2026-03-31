@@ -62,16 +62,19 @@ export default function ComboPlanner({
 
   // カテゴリ切替 or 初回マウント時に自動ロード
   useEffect(() => {
-    if (fridgeItems.length > 0 && !(displayedByCategory[activeCategory]?.length > 0)) {
+    if (!(displayedByCategory[activeCategory]?.length > 0)) {
       loadMore(activeCategory);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeCategory, fridgeItems.length]);
+  }, [activeCategory]);
 
-  // 消費優先トグル切替時：全カテゴリの表示をリセット
+  // 消費優先トグル切替時：即リセット＆現カテゴリを再ロード（カード消えないよう同期的に）
   useEffect(() => {
     excludedRef.current = {};
-    setDisplayedByCategory({});
+    isLoadingMore.current = false;
+    const result = pickRecipes(activeCategory, fridgeItems, [], LOAD_COUNT, consumeFirst);
+    excludedRef.current = { [activeCategory]: result.map((r) => r.id) };
+    setDisplayedByCategory({ [activeCategory]: result });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [consumeFirst]);
 
@@ -240,11 +243,7 @@ export default function ComboPlanner({
       </div>
 
       {/* レシピカード（横スクロール・全幅・無限） */}
-      {fridgeItems.length === 0 ? (
-        <div className="rounded-2xl px-4 py-3 text-sm" style={{ backgroundColor: "#ffffff", color: "#9a9a9a" }}>
-          冷蔵庫に食材を登録してから使用してください
-        </div>
-      ) : displayItems.length > 0 ? (
+      {displayItems.length > 0 ? (
         <div
           className="flex gap-3 overflow-x-auto pb-2"
           style={{
@@ -269,7 +268,11 @@ export default function ComboPlanner({
             </div>
           ))}
         </div>
-      ) : null}
+      ) : (
+        <div className="rounded-2xl px-4 py-3 text-sm" style={{ backgroundColor: "#ffffff", color: "#9a9a9a" }}>
+          読み込み中...
+        </div>
+      )}
     </div>
   );
 }

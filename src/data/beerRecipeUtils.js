@@ -59,29 +59,23 @@ function scoreRecipe(recipe, fridgeItems) {
 }
 
 /**
- * カテゴリを指定して冷蔵庫の食材にマッチしたレシピを返す。
- * consumeFirst=true のとき、冷蔵庫にある食材を使うレシピのみに絞り込む。
+ * カテゴリを指定してレシピを返す。
+ * consumeFirst=true: 冷蔵庫の食材を使うレシピを期限の近い順に優先表示
+ * consumeFirst=false: ランダム表示（スコアなし）
  */
 export function pickRecipes(category, fridgeItems, excludedIds = [], count = 8, consumeFirst = false) {
   const pool = RECIPES.filter(
     (r) => r.category === category && !excludedIds.includes(r.id)
   );
 
-  const scored = pool.map((r) => ({ ...r, _score: scoreRecipe(r, fridgeItems) }));
-
   if (consumeFirst) {
-    // 冷蔵庫の食材を1つ以上使うレシピだけ表示（スコア > 0）
+    const scored = pool.map((r) => ({ ...r, _score: scoreRecipe(r, fridgeItems) }));
     const matched = scored.filter((r) => r._score > 0);
     const source = matched.length > 0 ? matched : scored;
     source.sort((a, b) => b._score - a._score || Math.random() - 0.5);
     return source.slice(0, count);
   }
 
-  scored.sort((a, b) => {
-    if (b._score !== a._score) return b._score - a._score;
-    return Math.random() - 0.5;
-  });
-
-  const result = scored.slice(0, count);
-  return result.length > 0 ? result : pool.slice(0, count);
+  // OFFモード: ランダム
+  return [...pool].sort(() => Math.random() - 0.5).slice(0, count);
 }
