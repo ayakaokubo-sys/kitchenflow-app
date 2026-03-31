@@ -23,13 +23,16 @@ export default function ComboPlanner({
   onShowToast,
 }) {
   const [activeCategory, setActiveCategory] = useState("主食");
+  const [consumeFirst, setConsumeFirst] = useState(false);
   const [displayedByCategory, setDisplayedByCategory] = useState({});
 
   // refで除外済みIDを同期管理（スクロール連打での重複防止）
   const excludedRef = useRef({});
   const isLoadingMore = useRef(false);
   const activeCategoryRef = useRef(activeCategory);
+  const consumeFirstRef = useRef(consumeFirst);
   activeCategoryRef.current = activeCategory;
+  consumeFirstRef.current = consumeFirst;
 
   function loadMore(category) {
     if (isLoadingMore.current) return;
@@ -37,7 +40,7 @@ export default function ComboPlanner({
     isLoadingMore.current = true;
 
     const excluded = excludedRef.current[category] ?? [];
-    const result = pickRecipes(category, fridgeItems, excluded, LOAD_COUNT);
+    const result = pickRecipes(category, fridgeItems, excluded, LOAD_COUNT, consumeFirstRef.current);
     const toAdd = result.length > 0
       ? result
       : pickRecipes(category, fridgeItems, [], LOAD_COUNT);
@@ -64,6 +67,13 @@ export default function ComboPlanner({
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCategory, fridgeItems.length]);
+
+  // 消費優先トグル切替時：全カテゴリの表示をリセット
+  useEffect(() => {
+    excludedRef.current = {};
+    setDisplayedByCategory({});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [consumeFirst]);
 
   function switchCategory(cat) {
     setActiveCategory(cat);
@@ -183,8 +193,20 @@ export default function ComboPlanner({
       {/* 料理を探す */}
       <p className="font-semibold text-base mt-2" style={{ color: "#1c1a16" }}>料理を探す</p>
 
-      {/* カテゴリータブ */}
+      {/* カテゴリータブ + 消費優先トグル */}
       <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+        {/* 消費優先トグル */}
+        <button
+          onClick={() => setConsumeFirst((v) => !v)}
+          className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+          style={{
+            backgroundColor: consumeFirst ? "#e85d3a" : "#e8e0d8",
+            color: consumeFirst ? "#ffffff" : "#7a6a55",
+          }}
+        >
+          🔥 消費優先
+        </button>
+
         {CATEGORIES.map((cat) => {
           const isActive = activeCategory === cat;
           return (
