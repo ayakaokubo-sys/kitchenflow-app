@@ -224,8 +224,8 @@ export default function PhotoScanModal({ onAdd, onClose }) {
                       key={i}
                       className="rounded-xl"
                       style={{
-                        backgroundColor: selected.has(i) ? "#f0f8e8" : "#f5f0ea",
-                        border: `1.5px solid ${selected.has(i) ? "#2B4721" : "#e0d5c5"}`,
+                        backgroundColor: "#ffffff",
+                        border: "1.5px solid #e0d5c5",
                       }}
                     >
                       {/* 食材行 */}
