@@ -197,14 +197,27 @@ export async function fetchRecipeImage(recipeName) {
   if (cache[recipeName] !== undefined) return cache[recipeName] || null;
 
   try {
-    const query = encodeURIComponent(getSearchQuery(recipeName));
+    const baseQuery = getSearchQuery(recipeName);
+    const query = encodeURIComponent(baseQuery + " food");
     const res = await fetch(
-      `https://pixabay.com/api/?key=${API_KEY}&q=${query}&image_type=photo&per_page=5&safesearch=true&orientation=horizontal`
+      `https://pixabay.com/api/?key=${API_KEY}&q=${query}&image_type=photo&category=food&per_page=5&safesearch=true&orientation=horizontal`
     );
     if (!res.ok) return null;
     const data = await res.json();
 
-    const hits = data.hits ?? [];
+    let hits = data.hits ?? [];
+
+    // ヒットなしの場合は "japanese food dish" で再検索
+    if (hits.length === 0) {
+      const res2 = await fetch(
+        `https://pixabay.com/api/?key=${API_KEY}&q=japanese+food+dish&image_type=photo&category=food&per_page=10&safesearch=true&orientation=horizontal`
+      );
+      if (res2.ok) {
+        const data2 = await res2.json();
+        hits = data2.hits ?? [];
+      }
+    }
+
     const url = hits.length > 0
       ? hits[Math.floor(Math.random() * Math.min(3, hits.length))].webformatURL
       : null;
