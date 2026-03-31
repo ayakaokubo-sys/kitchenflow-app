@@ -205,7 +205,7 @@ export default function ComboPlanner({
           }}
         >
           {displayItems.map((recipe) => (
-            <div key={recipe.id} style={{ width: "230px", flexShrink: 0, display: "flex", height: "300px" }}>
+            <div key={recipe.id} style={{ width: "230px", flexShrink: 0, display: "flex", height: "280px" }}>
               <RecipeCard
                 recipe={recipe}
                 fridgeItems={fridgeItems}
