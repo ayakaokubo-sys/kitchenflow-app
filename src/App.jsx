@@ -331,27 +331,37 @@ export default function App() {
 
             {/* カテゴリーを追加（食材がある場合のみ表示） */}
             {showNewCatInput ? (
-              <div className="flex gap-2 mb-4">
-                <input
-                  type="text"
-                  value={newCatName}
-                  onChange={(e) => setNewCatName(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") handleAddCustomCategory(); if (e.key === "Escape") { setShowNewCatInput(false); setNewCatName(""); } }}
-                  placeholder="カテゴリー名を入力"
-                  autoFocus
-                  className="flex-1 rounded-xl px-3 py-2 text-sm border focus:outline-none"
-                  style={{ borderColor: "#d4cbbf", backgroundColor: "#f4f4f4", color: "#1c1a16" }}
-                />
-                <button
-                  onClick={handleAddCustomCategory}
-                  className="px-4 py-2 rounded-full text-sm font-semibold active:scale-95"
-                  style={{ backgroundColor: "#2B4721", color: "#ddf0c0" }}
-                >追加</button>
-                <button
-                  onClick={() => { setShowNewCatInput(false); setNewCatName(""); }}
-                  className="px-3 py-2 rounded-full text-sm border"
-                  style={{ color: "#8a7a65", borderColor: "#d4cbbf" }}
-                >×</button>
+              <div className="mb-4 rounded-2xl overflow-hidden shadow-sm" style={{ backgroundColor: "#ffffff", border: "1.5px solid #e8ddd0" }}>
+                <div className="flex items-center justify-between px-4 py-2.5 border-b" style={{ borderColor: "#f0e8e0" }}>
+                  <span className="text-sm font-semibold" style={{ color: "#1c1a16" }}>カテゴリーを選択</span>
+                  <button
+                    onClick={() => setShowNewCatInput(false)}
+                    className="w-6 h-6 rounded-full flex items-center justify-center hover:opacity-70"
+                    style={{ backgroundColor: "#f4f4f4", border: "1px solid #e0d8d0" }}
+                  >
+                    <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                      <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" stroke="#c0b8b0" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                  </button>
+                </div>
+                <div className="max-h-52 overflow-y-auto">
+                  {FOOD_CATEGORIES
+                    .filter((cat) => !customCategories.some((c) => c.name === cat.label))
+                    .map((cat) => (
+                      <button
+                        key={cat.label}
+                        onClick={() => {
+                          setCustomCategories((prev) => [...prev, { id: Date.now(), name: cat.label }]);
+                          setShowNewCatInput(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:opacity-70 active:scale-95 border-b last:border-0 transition-all"
+                        style={{ borderColor: "#f0e8e0", color: "#1c1a16" }}
+                      >
+                        <span className="text-base">{cat.emoji}</span>
+                        <span className="text-sm font-semibold">{cat.label}</span>
+                      </button>
+                    ))}
+                </div>
               </div>
             ) : sortedItems.length > 0 ? (
               <button
@@ -359,7 +369,7 @@ export default function App() {
                 className="mb-3 flex items-center gap-1 hover:opacity-70 active:scale-95 transition-all"
                 style={{ color: "#8a7a65" }}
               >
-                <span className="text-xs font-semibold">＋ カテゴリーを追加</span>
+                <span className="text-sm font-semibold">＋ カテゴリーを追加</span>
               </button>
             ) : null}
 
@@ -385,7 +395,7 @@ export default function App() {
                   }}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-semibold" style={{ color: "#5a4a35" }}>{cat.name}</p>
+                    <p className="text-sm font-semibold" style={{ color: "#5a4a35" }}>{cat.name}</p>
                     <button
                       onClick={() => handleDeleteCustomCategory(cat.id)}
                       className="w-5 h-5 rounded-full flex items-center justify-center hover:opacity-70"
@@ -433,7 +443,7 @@ export default function App() {
                   if (catItems.length === 0) return null;
                   return (
                     <div key={cat.label}>
-                      <p className="text-xs font-semibold mb-2" style={{ color: "#8a7a65" }}>
+                      <p className="text-sm font-semibold mb-2" style={{ color: "#8a7a65" }}>
                         {cat.emoji} {cat.label}
                       </p>
                       <div className="flex flex-col gap-3">

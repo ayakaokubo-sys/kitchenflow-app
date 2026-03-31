@@ -20,12 +20,12 @@ export default function BottomNav({ activeTab, onChange, shoppingCount }) {
               className="flex-1 flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl relative transition-all active:scale-95"
               style={{ color: isActive ? "#2B4721" : "#9a8a78" }}
             >
-              <span className="relative inline-block">
+              <span className="relative inline-flex items-center justify-center w-8 h-7">
                 <span className="text-xl leading-none">{tab.icon}</span>
                 {tab.id === "shopping" && shoppingCount > 0 && (
                   <span
-                    className="absolute -top-1 -right-2 text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center leading-none shadow-sm"
-                    style={{ backgroundColor: "#8b3a2a", color: "#fff", fontSize: "10px" }}
+                    className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 text-xs font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none shadow-sm"
+                    style={{ backgroundColor: "#8b3a2a", color: "#fff", fontSize: "9px" }}
                   >
                     {shoppingCount > 9 ? "9+" : shoppingCount}
                   </span>

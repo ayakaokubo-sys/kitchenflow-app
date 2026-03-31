@@ -76,7 +76,7 @@ export default function FoodCard({
       className="rounded-2xl overflow-hidden shadow-sm"
       style={{
         backgroundColor: s.bg,
-        border: s.border ? `2px solid ${s.border}` : "2px solid #e8ddd0",
+        border: s.border ? `1.5px solid ${s.border}` : "2px solid #e8ddd0",
       }}
     >
       <div className="flex items-stretch">
