@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { CATEGORIES, pickRecipes, getIngredientsToBuy, getRecipeUrl } from "../data/beerRecipeUtils";
 import { ALL_FOODS } from "../data/foodCategories";
-import { generateRecipeImage } from "../api/geminiRecipeImageApi";
+import { fetchRecipeImage } from "../api/pixabayApi";
 
 const CATEGORY_EMOJI = {
   主食: "🍚",
@@ -219,7 +219,7 @@ function RecipeCard({ recipe, fridgeItems, alreadyAdded, onAdd }) {
 
   useEffect(() => {
     let cancelled = false;
-    generateRecipeImage(recipe.name).then((url) => {
+    fetchRecipeImage(recipe.name).then((url) => {
       if (!cancelled) { setImgUrl(url); setImgLoading(false); }
     });
     return () => { cancelled = true; };
