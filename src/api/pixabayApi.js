@@ -1,5 +1,5 @@
-const API_KEY = import.meta.env.VITE_PIXABAY_API_KEY;
-const CACHE_KEY = "freshkeep_pixabay_img_cache";
+const API_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
+const CACHE_KEY = "freshkeep_unsplash_img_cache";
 
 function getCache() {
   try { return JSON.parse(localStorage.getItem(CACHE_KEY) || "{}"); } catch { return {}; }
@@ -80,7 +80,6 @@ const RECIPE_QUERY_MAP = {
   "チキンカレー": "chicken curry",
   "キーマカレー": "keema curry minced meat",
   "牛肉のすき煮": "sukiyaki beef tofu",
-  "牛肉のしぐれ煮": "beef ginger simmered japanese",
   "ロールキャベツ": "stuffed cabbage roll",
   "煮込みハンバーグ": "hamburger steak demi glace sauce",
   "鮭の塩焼き": "grilled salmon salt",
@@ -188,7 +187,7 @@ export function clearRecipeImageCache() {
 }
 
 /**
- * 料理名でPixabayから食材写真URLを取得（localStorageキャッシュ付き）
+ * 料理名でUnsplashから食材写真URLを取得（localStorageキャッシュ付き）
  */
 export async function fetchRecipeImage(recipeName) {
   if (!API_KEY) return null;
@@ -198,28 +197,28 @@ export async function fetchRecipeImage(recipeName) {
 
   try {
     const baseQuery = getSearchQuery(recipeName);
-    const query = encodeURIComponent(baseQuery + " food");
+    const query = encodeURIComponent(baseQuery);
     const res = await fetch(
-      `https://pixabay.com/api/?key=${API_KEY}&q=${query}&image_type=photo&category=food&per_page=5&safesearch=true&orientation=horizontal`
+      `https://api.unsplash.com/search/photos?query=${query}&per_page=5&client_id=${API_KEY}&orientation=landscape&content_filter=high`
     );
     if (!res.ok) return null;
     const data = await res.json();
 
-    let hits = data.hits ?? [];
+    let results = data.results ?? [];
 
     // ヒットなしの場合は "japanese food dish" で再検索
-    if (hits.length === 0) {
+    if (results.length === 0) {
       const res2 = await fetch(
-        `https://pixabay.com/api/?key=${API_KEY}&q=japanese+food+dish&image_type=photo&category=food&per_page=10&safesearch=true&orientation=horizontal`
+        `https://api.unsplash.com/search/photos?query=japanese+food+dish&per_page=10&client_id=${API_KEY}&orientation=landscape&content_filter=high`
       );
       if (res2.ok) {
         const data2 = await res2.json();
-        hits = data2.hits ?? [];
+        results = data2.results ?? [];
       }
     }
 
-    const url = hits.length > 0
-      ? hits[Math.floor(Math.random() * Math.min(3, hits.length))].webformatURL
+    const url = results.length > 0
+      ? results[Math.floor(Math.random() * Math.min(3, results.length))].urls.small
       : null;
 
     setCache({ ...getCache(), [recipeName]: url ?? "" });
