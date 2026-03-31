@@ -195,17 +195,31 @@ export default function ComboPlanner({
 
       {/* カテゴリータブ + 消費優先トグル */}
       <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
-        {/* 消費優先トグル */}
-        <button
-          onClick={() => setConsumeFirst((v) => !v)}
-          className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
-          style={{
-            backgroundColor: consumeFirst ? "#e85d3a" : "#e8e0d8",
-            color: consumeFirst ? "#ffffff" : "#7a6a55",
-          }}
-        >
-          🔥 消費優先
-        </button>
+        {/* 消費優先トグルスイッチ */}
+        <label className="flex-shrink-0 flex items-center gap-2 cursor-pointer select-none pr-1">
+          <span className="text-xs font-semibold" style={{ color: "#4a3a28" }}>消費優先</span>
+          <span
+            onClick={() => setConsumeFirst((v) => !v)}
+            className="relative inline-block transition-colors duration-200"
+            style={{
+              width: "36px", height: "20px",
+              borderRadius: "10px",
+              backgroundColor: consumeFirst ? "#e85d3a" : "#c8c0b8",
+            }}
+          >
+            <span
+              className="absolute top-0.5 transition-transform duration-200"
+              style={{
+                width: "16px", height: "16px",
+                borderRadius: "50%",
+                backgroundColor: "#ffffff",
+                left: "2px",
+                transform: consumeFirst ? "translateX(16px)" : "translateX(0)",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+              }}
+            />
+          </span>
+        </label>
 
         {CATEGORIES.map((cat) => {
           const isActive = activeCategory === cat;
