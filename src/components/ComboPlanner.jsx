@@ -202,11 +202,10 @@ export default function ComboPlanner({
             marginRight: "-1rem",
             paddingLeft: "1rem",
             paddingRight: "1rem",
-            scrollSnapType: "x mandatory",
           }}
         >
           {displayItems.map((recipe) => (
-            <div key={recipe.id} style={{ width: "calc(100vw - 2.5rem)", maxWidth: "480px", flexShrink: 0, display: "flex", height: "300px", scrollSnapAlign: "start" }}>
+            <div key={recipe.id} style={{ width: "230px", flexShrink: 0, display: "flex", height: "300px" }}>
               <RecipeCard
                 recipe={recipe}
                 fridgeItems={fridgeItems}
