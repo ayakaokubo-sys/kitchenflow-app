@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CATEGORIES, pickRecipes, getIngredientsToBuy, getRecipeUrl } from "../data/beerRecipeUtils";
 import { ALL_FOODS } from "../data/foodCategories";
 import { fetchRecipeImage } from "../api/pixabayApi";
@@ -11,6 +11,7 @@ const CATEGORY_EMOJI = {
 };
 
 const MAX_BUY_TAGS = 3;
+const LOAD_COUNT = 5;
 
 export default function ComboPlanner({
   fridgeItems,
@@ -21,28 +22,59 @@ export default function ComboPlanner({
   onEatRecipe,
   onShowToast,
 }) {
-  const [activeCategory, setActiveCategory] = useState("主菜");
-  const [recipes, setRecipes] = useState(null);
-  const [excludedByCategory, setExcludedByCategory] = useState({});
+  const [activeCategory, setActiveCategory] = useState("主食");
+  const [displayedByCategory, setDisplayedByCategory] = useState({});
 
-  function generate() {
-    const excluded = excludedByCategory[activeCategory] ?? [];
-    const result = pickRecipes(activeCategory, fridgeItems, excluded, 8);
-    const finalResult = result.length > 0
+  // refで除外済みIDを同期管理（スクロール連打での重複防止）
+  const excludedRef = useRef({});
+  const isLoadingMore = useRef(false);
+  const activeCategoryRef = useRef(activeCategory);
+  activeCategoryRef.current = activeCategory;
+
+  function loadMore(category) {
+    if (isLoadingMore.current) return;
+    if (fridgeItems.length === 0) return;
+    isLoadingMore.current = true;
+
+    const excluded = excludedRef.current[category] ?? [];
+    const result = pickRecipes(category, fridgeItems, excluded, LOAD_COUNT);
+    const toAdd = result.length > 0
       ? result
-      : pickRecipes(activeCategory, fridgeItems, [], 8);
+      : pickRecipes(category, fridgeItems, [], LOAD_COUNT);
 
-    setRecipes({ category: activeCategory, items: finalResult });
-    setExcludedByCategory((prev) => {
-      const newIds = finalResult.map((r) => r.id);
-      const prevIds = prev[activeCategory] ?? [];
-      return { ...prev, [activeCategory]: [...new Set([...prevIds, ...newIds])] };
-    });
+    // refを即時更新（次のscrollイベントで重複しないよう）
+    const prevEx = excludedRef.current[category] ?? [];
+    excludedRef.current = {
+      ...excludedRef.current,
+      [category]: [...new Set([...prevEx, ...toAdd.map((r) => r.id)])],
+    };
+
+    setDisplayedByCategory((prev) => ({
+      ...prev,
+      [category]: [...(prev[category] ?? []), ...toAdd],
+    }));
+
+    isLoadingMore.current = false;
   }
+
+  // カテゴリ切替 or 初回マウント時に自動ロード
+  useEffect(() => {
+    if (fridgeItems.length > 0 && !(displayedByCategory[activeCategory]?.length > 0)) {
+      loadMore(activeCategory);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCategory, fridgeItems.length]);
 
   function switchCategory(cat) {
     setActiveCategory(cat);
-    setRecipes(null);
+  }
+
+  // 横スクロールが末尾に近づいたら追加ロード
+  function handleScroll(e) {
+    const el = e.currentTarget;
+    if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 100) {
+      loadMore(activeCategoryRef.current);
+    }
   }
 
   function handleAddToToday(recipe) {
@@ -77,8 +109,7 @@ export default function ComboPlanner({
     }
   }
 
-  const displayItems = recipes?.category === activeCategory ? recipes.items : null;
-  const isRegenerate = recipes?.category === activeCategory;
+  const displayItems = displayedByCategory[activeCategory] ?? [];
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6 flex flex-col gap-4">
@@ -99,7 +130,6 @@ export default function ComboPlanner({
                   className="rounded-2xl px-4 py-3 shadow-sm flex flex-col gap-2"
                   style={{ backgroundColor: "#ffffff" }}
                 >
-                  {/* 上段: 料理名 + closeボタン */}
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-sm flex-1 min-w-0 truncate" style={{ color: "#1c1a16" }}>
                       {recipe.name}
@@ -115,7 +145,6 @@ export default function ComboPlanner({
                     </button>
                   </div>
 
-                  {/* 下段: ボタン群 */}
                   <div className="flex items-center gap-2">
                     {url && (
                       <a
@@ -141,7 +170,6 @@ export default function ComboPlanner({
             })}
           </div>
 
-          {/* 買い物リストへ追加ボタン */}
           <button
             onClick={handleAddAllToShoppingList}
             className="w-full font-semibold py-3 rounded-full text-sm transition-all shadow-sm active:scale-95"
@@ -175,23 +203,12 @@ export default function ComboPlanner({
         })}
       </div>
 
-      {/* 料理を探すボタン */}
+      {/* レシピカード（横スクロール・全幅・無限） */}
       {fridgeItems.length === 0 ? (
         <div className="rounded-2xl px-4 py-3 text-sm" style={{ backgroundColor: "#ffffff", color: "#9a9a9a" }}>
           冷蔵庫に食材を登録してから使用してください
         </div>
-      ) : (
-        <button
-          onClick={generate}
-          className="w-full font-semibold py-3.5 rounded-full text-sm transition-all shadow-md active:scale-95"
-          style={{ backgroundColor: "#2B4721", color: "#ddf0c0" }}
-        >
-          {isRegenerate ? "🔁 別の料理を探す" : "🔍 料理を探す"}
-        </button>
-      )}
-
-      {/* レシピカード（横スクロール・全幅） */}
-      {displayItems && displayItems.length > 0 && (
+      ) : displayItems.length > 0 ? (
         <div
           className="flex gap-3 overflow-x-auto pb-2"
           style={{
@@ -203,6 +220,7 @@ export default function ComboPlanner({
             paddingLeft: "1rem",
             paddingRight: "1rem",
           }}
+          onScroll={handleScroll}
         >
           {displayItems.map((recipe) => (
             <div key={recipe.id} style={{ width: "230px", flexShrink: 0, display: "flex", height: "280px" }}>
@@ -211,12 +229,11 @@ export default function ComboPlanner({
                 fridgeItems={fridgeItems}
                 alreadyAdded={todayMenu.some((m) => m.name === recipe.name)}
                 onAdd={() => handleAddToToday(recipe)}
-                onRemove={() => {/* excluded from display on next generate */}}
               />
             </div>
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -236,7 +253,6 @@ function RecipeCard({ recipe, fridgeItems, alreadyAdded, onAdd }) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // 🧊 冷蔵庫の一致食材（賞味期限が近い順）
   const matchedFridge = fridgeItems
     .filter((item) => recipe.keywords.some((kw) => item.name.includes(kw) || kw.includes(item.name)))
     .sort((a, b) => {
@@ -245,7 +261,6 @@ function RecipeCard({ recipe, fridgeItems, alreadyAdded, onAdd }) {
       return da - db;
     });
 
-  // 🛒 買い足し食材
   const toBuy = getIngredientsToBuy(recipe, fridgeItems);
   const toBuyVisible = toBuy.slice(0, MAX_BUY_TAGS);
   const toBuyExtra = toBuy.length - MAX_BUY_TAGS;
@@ -279,7 +294,6 @@ function RecipeCard({ recipe, fridgeItems, alreadyAdded, onAdd }) {
       <div className="p-3 flex flex-col gap-2 flex-1">
         <h4 className="font-semibold text-sm leading-snug" style={{ color: "#1c1a16" }}>{recipe.name}</h4>
 
-        {/* 食材タグ */}
         {(matchedFridge.length > 0 || toBuy.length > 0) && (
           <div className="flex flex-wrap gap-1">
             {matchedFridge.map((item) => {
@@ -318,7 +332,6 @@ function RecipeCard({ recipe, fridgeItems, alreadyAdded, onAdd }) {
           </div>
         )}
 
-        {/* 献立に追加ボタン */}
         <button
           onClick={onAdd}
           disabled={alreadyAdded}
