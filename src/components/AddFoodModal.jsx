@@ -116,7 +116,7 @@ export default function AddFoodModal({ onAdd, onClose, initialData = null }) {
                       type="button"
                       onClick={() => selectFood(food)}
                       className="flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-medium hover:opacity-80 transition-colors"
-                      style={{ backgroundColor: "rgba(45,80,22,0.08)", border: "1px solid rgba(45,80,22,0.2)", color: "#2d5016" }}
+                      style={{ backgroundColor: "rgba(43,71,33,0.08)", border: "1px solid rgba(43,71,33,0.2)", color: "#2B4721" }}
                     >
                       <span>{food.emoji}</span>
                       <span>{food.name}</span>
@@ -234,15 +234,15 @@ export default function AddFoodModal({ onAdd, onClose, initialData = null }) {
                 onChange={(e) => setExpiryDate(e.target.value)}
                 required
                 className="w-full border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none text-sm"
-                style={{ "--tw-ring-color": "#2d5016" }}
+                style={{ "--tw-ring-color": "#2B4721" }}
               />
             </div>
 
             <button
               type="submit"
               disabled={!query.trim() || !expiryDate}
-              className="w-full font-semibold py-3 rounded-xl transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ backgroundColor: "#2d5016", color: "#ddf0c0" }}
+              className="w-full font-semibold py-3 rounded-full transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ backgroundColor: "#2B4721", color: "#ddf0c0" }}
             >
               追加する
             </button>

@@ -29,7 +29,7 @@ export default function RecipeSuggestion({ topItem }) {
   return (
     <div className="relative flex items-start gap-3 mb-4">
       {/* キャラクターアイコン */}
-      <div className="flex-shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center text-xl shadow-md" style={{ backgroundColor: "#2d5016" }}>
+      <div className="flex-shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center text-xl shadow-md" style={{ backgroundColor: "#2B4721" }}>
         🧑‍🍳
       </div>
 
@@ -45,7 +45,7 @@ export default function RecipeSuggestion({ topItem }) {
           }}
         >
           How about making{" "}
-          <span className="font-black" style={{ color: "#2d5016" }}>{recipeName}</span>{" "}
+          <span className="font-black" style={{ color: "#2B4721" }}>{recipeName}</span>{" "}
           with{" "}
           <span className="font-black" style={{ color: "#1c1a16" }}>{topItem.name}</span>?
         </p>

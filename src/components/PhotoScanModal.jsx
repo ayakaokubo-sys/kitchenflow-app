@@ -183,17 +183,17 @@ export default function PhotoScanModal({ onAdd, onClose }) {
               </div>
 
               <div className="flex gap-3">
-                <button onClick={() => cameraInputRef.current.click()} className="text-sm font-semibold underline" style={{ color: "#2d5016" }}>撮り直す</button>
+                <button onClick={() => cameraInputRef.current.click()} className="text-sm font-semibold underline" style={{ color: "#2B4721" }}>撮り直す</button>
                 <span style={{ color: "#c8b99a" }}>|</span>
-                <button onClick={() => libraryInputRef.current.click()} className="text-sm font-semibold underline" style={{ color: "#2d5016" }}>ライブラリから選ぶ</button>
+                <button onClick={() => libraryInputRef.current.click()} className="text-sm font-semibold underline" style={{ color: "#2B4721" }}>ライブラリから選ぶ</button>
               </div>
 
               {!results && (
                 <button
                   onClick={handleScan}
                   disabled={scanning || noKey}
-                  className="w-full py-3.5 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 shadow-md active:scale-95 disabled:opacity-50"
-                  style={{ backgroundColor: "#2d5016", color: "#ddf0c0" }}
+                  className="w-full py-3.5 rounded-full font-semibold text-sm flex items-center justify-center gap-2 shadow-md active:scale-95 disabled:opacity-50"
+                  style={{ backgroundColor: "#2B4721", color: "#ddf0c0" }}
                 >
                   {scanning ? <><span className="inline-block animate-spin">⟳</span> AIが食材を認識中...</> : "🔍 食材を認識する"}
                 </button>
@@ -212,7 +212,7 @@ export default function PhotoScanModal({ onAdd, onClose }) {
                     {results.length > 0 && (
                       <button
                         onClick={() => setSelected(selected.size === results.length ? new Set() : new Set(results.map((_, i) => i)))}
-                        className="text-xs font-semibold" style={{ color: "#2d5016" }}
+                        className="text-xs font-semibold" style={{ color: "#2B4721" }}
                       >
                         {selected.size === results.length ? "すべて解除" : "すべて選択"}
                       </button>
@@ -225,7 +225,7 @@ export default function PhotoScanModal({ onAdd, onClose }) {
                       className="rounded-xl"
                       style={{
                         backgroundColor: selected.has(i) ? "#f0f8e8" : "#f5f0ea",
-                        border: `1.5px solid ${selected.has(i) ? "#2d5016" : "#e0d5c5"}`,
+                        border: `1.5px solid ${selected.has(i) ? "#2B4721" : "#e0d5c5"}`,
                       }}
                     >
                       {/* 食材行 */}
@@ -276,14 +276,14 @@ export default function PhotoScanModal({ onAdd, onClose }) {
                     <>
                       <button
                         onClick={handleScan}
-                        className="w-full py-2.5 rounded-xl text-sm font-semibold border"
+                        className="w-full py-2.5 rounded-full text-sm font-semibold border"
                         style={{ borderColor: "#c8b99a", color: "#5a4a35", backgroundColor: "#fdf8f2" }}
                       >🔄 再認識する</button>
                       <button
                         onClick={handleAdd}
                         disabled={selected.size === 0}
-                        className="w-full py-3.5 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 shadow-md active:scale-95 disabled:opacity-40"
-                        style={{ backgroundColor: "#2d5016", color: "#ddf0c0" }}
+                        className="w-full py-3.5 rounded-full font-semibold text-sm flex items-center justify-center gap-2 shadow-md active:scale-95 disabled:opacity-40"
+                        style={{ backgroundColor: "#2B4721", color: "#ddf0c0" }}
                       >
                         🧊 {selected.size}品を冷蔵庫に追加
                       </button>

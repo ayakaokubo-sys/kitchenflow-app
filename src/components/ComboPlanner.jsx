@@ -122,7 +122,7 @@ export default function ComboPlanner({
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap"
-                        style={{ backgroundColor: "rgba(45,80,22,0.08)", color: "#2d5016", border: "1px solid rgba(45,80,22,0.2)" }}
+                        style={{ backgroundColor: "rgba(43,71,33,0.08)", color: "#2B4721", border: "1px solid rgba(43,71,33,0.2)" }}
                       >
                         🍳 レシピを見る
                       </a>
@@ -130,7 +130,7 @@ export default function ComboPlanner({
                     <button
                       onClick={() => onEatRecipe?.(recipe)}
                       className="text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap active:scale-95"
-                      style={{ backgroundColor: "#2d5016", color: "#ddf0c0" }}
+                      style={{ backgroundColor: "#2B4721", color: "#ddf0c0" }}
                     >
                       🍽️ 食べた
                     </button>
@@ -143,7 +143,7 @@ export default function ComboPlanner({
           {/* 買い物リストへ追加ボタン */}
           <button
             onClick={handleAddAllToShoppingList}
-            className="w-full font-semibold py-3 rounded-2xl text-sm transition-all shadow-sm active:scale-95"
+            className="w-full font-semibold py-3 rounded-full text-sm transition-all shadow-sm active:scale-95"
             style={{ backgroundColor: "#f5f0ea", color: "#5a4a35", border: "1.5px solid #e0d5c5" }}
           >
             🛒 必要な食材を買い物リストに追加
@@ -164,7 +164,7 @@ export default function ComboPlanner({
               onClick={() => switchCategory(cat)}
               className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
               style={{
-                backgroundColor: isActive ? "#2d5016" : "#d8d0c8",
+                backgroundColor: isActive ? "#2B4721" : "#d8d0c8",
                 color: isActive ? "#ddf0c0" : "#4a3a28",
               }}
             >
@@ -182,8 +182,8 @@ export default function ComboPlanner({
       ) : (
         <button
           onClick={generate}
-          className="w-full font-semibold py-3.5 rounded-2xl text-sm transition-all shadow-md active:scale-95"
-          style={{ backgroundColor: "#2d5016", color: "#ddf0c0" }}
+          className="w-full font-semibold py-3.5 rounded-full text-sm transition-all shadow-md active:scale-95"
+          style={{ backgroundColor: "#2B4721", color: "#ddf0c0" }}
         >
           {isRegenerate ? "🔁 別の料理を探す" : "🔍 料理を探す"}
         </button>
@@ -235,7 +235,7 @@ function RecipeCard({ recipe, fridgeItems, alreadyAdded, onAdd }) {
       className="rounded-2xl shadow-sm flex flex-col overflow-hidden w-full"
       style={{
         backgroundColor: "#ffffff",
-        border: alreadyAdded ? "2px solid #2d5016" : "2px solid #e8ddd0",
+        border: alreadyAdded ? "2px solid #2B4721" : "2px solid #e8ddd0",
       }}
     >
       <div className="p-3 flex flex-col gap-2 flex-1">
@@ -254,7 +254,7 @@ function RecipeCard({ recipe, fridgeItems, alreadyAdded, onAdd }) {
                   className="text-xs font-semibold px-2 py-0.5 rounded-full"
                   style={{
                     backgroundColor: urgent ? "#fff0f0" : "#dff0c0",
-                    color: urgent ? "#cc4444" : "#2d5016",
+                    color: urgent ? "#cc4444" : "#2B4721",
                   }}
                 >
                   🧊 {item.name}
@@ -285,9 +285,9 @@ function RecipeCard({ recipe, fridgeItems, alreadyAdded, onAdd }) {
         <button
           onClick={onAdd}
           disabled={alreadyAdded}
-          className="mt-auto w-full py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 disabled:opacity-50"
+          className="mt-auto w-full py-2 rounded-full text-xs font-semibold transition-all active:scale-95 disabled:opacity-50"
           style={{
-            backgroundColor: alreadyAdded ? "#ede8e0" : "#2d5016",
+            backgroundColor: alreadyAdded ? "#ede8e0" : "#2B4721",
             color: alreadyAdded ? "#8a7a65" : "#ddf0c0",
           }}
         >

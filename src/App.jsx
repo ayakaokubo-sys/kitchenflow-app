@@ -296,9 +296,9 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen pb-20" style={{ backgroundColor: "#f5ede0" }}>
+    <div className="min-h-screen pb-20" style={{ backgroundColor: "#F1E9DD" }}>
       {/* ヘッダー */}
-      <header className="sticky top-0 z-40 backdrop-blur border-b shadow-sm" style={{ backgroundColor: "rgba(245,237,224,0.92)", borderColor: "#e8d9c4" }}>
+      <header className="sticky top-0 z-40 backdrop-blur border-b shadow-sm" style={{ backgroundColor: "rgba(241,233,221,0.92)", borderColor: "#e8d9c4" }}>
         <div className="max-w-lg mx-auto px-5 py-4 flex items-center justify-center">
           <h1 className="text-xl font-black leading-tight tracking-tight" style={{ color: "#1c1a16" }}>Kitchenflow</h1>
         </div>
@@ -313,8 +313,8 @@ export default function App() {
             <div className="flex gap-2 mb-3">
               <button
                 onClick={() => setShowModal(true)}
-                className="flex-1 font-bold py-3 rounded-2xl text-sm transition-all shadow-md flex items-center justify-center gap-1.5 active:scale-95"
-                style={{ backgroundColor: "#2d5016", color: "#ddf0c0" }}
+                className="flex-1 font-bold py-3 rounded-full text-sm transition-all shadow-md flex items-center justify-center gap-1.5 active:scale-95"
+                style={{ backgroundColor: "#2B4721", color: "#ddf0c0" }}
               >
                 <span className="text-base leading-none font-black">＋</span>
                 <span>食材を追加</span>
@@ -322,14 +322,14 @@ export default function App() {
               <button
                 onClick={() => setShowPhotoScan(true)}
                 className="w-12 h-12 rounded-full font-black text-base transition-all shadow-md flex items-center justify-center active:scale-95 flex-shrink-0"
-                style={{ backgroundColor: "#ffffff", border: "1.5px solid #c0b8b0", color: "#2d5016" }}
+                style={{ backgroundColor: "#ffffff", border: "1.5px solid #c0b8b0", color: "#2B4721" }}
                 title="写真から食材を追加"
               >
                 📷
               </button>
             </div>
 
-            {/* カテゴリーを追加 */}
+            {/* カテゴリーを追加（食材がある場合のみ表示） */}
             {showNewCatInput ? (
               <div className="flex gap-2 mb-4">
                 <input
@@ -344,24 +344,24 @@ export default function App() {
                 />
                 <button
                   onClick={handleAddCustomCategory}
-                  className="px-4 py-2 rounded-xl text-sm font-semibold active:scale-95"
-                  style={{ backgroundColor: "#2d5016", color: "#ddf0c0" }}
+                  className="px-4 py-2 rounded-full text-sm font-semibold active:scale-95"
+                  style={{ backgroundColor: "#2B4721", color: "#ddf0c0" }}
                 >追加</button>
                 <button
                   onClick={() => { setShowNewCatInput(false); setNewCatName(""); }}
-                  className="px-3 py-2 rounded-xl text-sm border"
+                  className="px-3 py-2 rounded-full text-sm border"
                   style={{ color: "#8a7a65", borderColor: "#d4cbbf" }}
                 >×</button>
               </div>
-            ) : (
+            ) : sortedItems.length > 0 ? (
               <button
                 onClick={() => setShowNewCatInput(true)}
-                className="w-full mb-4 py-2 rounded-xl text-sm font-semibold border-2 border-dashed flex items-center justify-center gap-1.5 hover:opacity-70 active:scale-95 transition-all"
-                style={{ borderColor: "#c8b99a", color: "#8a7a65" }}
+                className="mb-3 flex items-center gap-1 hover:opacity-70 active:scale-95 transition-all"
+                style={{ color: "#8a7a65" }}
               >
-                <span className="text-base leading-none">＋</span> カテゴリーを追加
+                <span className="text-xs font-semibold">＋ カテゴリーを追加</span>
               </button>
-            )}
+            ) : null}
 
             {/* カスタムカテゴリーエリア */}
             {customCategories.map((cat) => {
@@ -372,8 +372,8 @@ export default function App() {
                   key={cat.id}
                   className="rounded-2xl p-3 mb-4 transition-colors"
                   style={{
-                    border: isOver ? "2px dashed #2d5016" : "2px dashed #c8b99a",
-                    backgroundColor: isOver ? "rgba(45,80,22,0.04)" : "transparent",
+                    border: isOver ? "2px dashed #2B4721" : "2px dashed #c8b99a",
+                    backgroundColor: isOver ? "rgba(43,71,33,0.04)" : "transparent",
                   }}
                   onDragOver={(e) => { e.preventDefault(); setDragOverCatId(cat.id); }}
                   onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setDragOverCatId(null); }}
@@ -483,17 +483,15 @@ export default function App() {
                       {renderGroup(displayItems)}
 
                       {otherItems.length > 0 && (
-                        <button
-                          onClick={() => setShowAllFridgeItems((v) => !v)}
-                          className="w-full py-2.5 rounded-2xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-95"
-                          style={{ backgroundColor: "#ede8e0", color: "#5a4a35" }}
-                        >
-                          {showAllFridgeItems ? (
-                            <>折りたたむ <span style={{ fontSize: "10px" }}>▲</span></>
-                          ) : (
-                            <>他に {otherItems.length} 品の食材 <span style={{ fontSize: "10px" }}>▼</span></>
-                          )}
-                        </button>
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => setShowAllFridgeItems((v) => !v)}
+                            className="text-xs font-semibold flex items-center gap-1 hover:opacity-70 active:scale-95 transition-all"
+                            style={{ color: "#8a7a65" }}
+                          >
+                            {showAllFridgeItems ? <>折りたたむ <span>▲</span></> : <>他に {otherItems.length} 品の食材 <span>▼</span></>}
+                          </button>
+                        </div>
                       )}
                     </>
                   )}
@@ -560,7 +558,7 @@ export default function App() {
         <div
           key={toast}
           className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 text-white text-sm font-bold px-6 py-3 rounded-2xl shadow-2xl whitespace-nowrap"
-          style={{ backgroundColor: "#2d5016", animation: "fadeInUp 0.25s ease-out" }}
+          style={{ backgroundColor: "#2B4721", animation: "fadeInUp 0.25s ease-out" }}
         >
           {toast}
         </div>

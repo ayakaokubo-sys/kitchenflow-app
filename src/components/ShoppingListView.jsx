@@ -36,8 +36,8 @@ export default function ShoppingListView({
         </p>
         <button
           onClick={() => setShowAddForm((v) => !v)}
-          className="font-semibold text-xs px-3 py-2 rounded-xl flex items-center gap-1 active:scale-95 transition-all"
-          style={{ backgroundColor: "#2d5016", color: "#ddf0c0" }}
+          className="font-semibold text-xs px-3 py-2 rounded-full flex items-center gap-1 active:scale-95 transition-all"
+          style={{ backgroundColor: "#2B4721", color: "#ddf0c0" }}
         >
           <span>＋</span> 手動追加
         </button>
@@ -81,8 +81,8 @@ export default function ShoppingListView({
           <div className="flex gap-2">
             <button
               type="submit"
-              className="flex-1 font-semibold py-2 rounded-xl text-sm transition-colors"
-              style={{ backgroundColor: "#2d5016", color: "#ddf0c0" }}
+              className="flex-1 font-semibold py-2 rounded-full text-sm transition-colors"
+              style={{ backgroundColor: "#2B4721", color: "#ddf0c0" }}
             >
               追加
             </button>
@@ -138,8 +138,8 @@ export default function ShoppingListView({
                 </button>
                 <button
                   onClick={() => onAddAllCheckedToFridge?.(checked)}
-                  className="text-xs font-semibold px-3 py-1.5 rounded-xl active:scale-95 transition-all"
-                  style={{ backgroundColor: "rgba(45,80,22,0.08)", color: "#2d5016", border: "1px solid rgba(45,80,22,0.2)" }}
+                  className="text-xs font-semibold px-3 py-1.5 rounded-full active:scale-95 transition-all"
+                  style={{ backgroundColor: "rgba(43,71,33,0.08)", color: "#2B4721", border: "1px solid rgba(43,71,33,0.2)" }}
                 >
                   🧊 食材を冷蔵庫へ
                 </button>
@@ -219,8 +219,8 @@ function ShoppingItem({ item, onToggle, onRemove, onUpdateItem }) {
           onClick={handleCheckboxClick}
           className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-colors"
           style={{
-            backgroundColor: displayChecked ? "#2d5016" : "#ffffff",
-            border: displayChecked ? "2px solid #2d5016" : "2px solid #c0b8b0",
+            backgroundColor: displayChecked ? "#2B4721" : "#ffffff",
+            border: displayChecked ? "2px solid #2B4721" : "2px solid #c0b8b0",
           }}
         >
           {displayChecked && (

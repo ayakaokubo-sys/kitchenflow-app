@@ -26,7 +26,7 @@ function StatusBadge({ daysLeft }) {
   if (daysLeft < 0)  return <span className={base} style={{ ...style, backgroundColor: "rgba(255,255,255,0.15)", borderColor: "rgba(255,255,255,0.3)", color: "#fff" }}>期限切れ</span>;
   if (daysLeft === 0) return <span className={base} style={{ ...style, backgroundColor: "#fff3e0", borderColor: "#f97316", color: "#c2410c" }}>今日まで</span>;
   if (daysLeft <= 3)  return <span className={base} style={{ ...style, backgroundColor: "#fff7ed", borderColor: "#fb923c", color: "#ea580c" }}>あと {daysLeft} 日</span>;
-  return <span className={base} style={{ ...style, backgroundColor: "rgba(45,80,22,0.08)", borderColor: "rgba(45,80,22,0.2)", color: "#2d5016" }}>あと {daysLeft} 日</span>;
+  return <span className={base} style={{ ...style, backgroundColor: "rgba(43,71,33,0.08)", borderColor: "rgba(43,71,33,0.2)", color: "#2B4721" }}>あと {daysLeft} 日</span>;
 }
 
 export default function FoodCard({
