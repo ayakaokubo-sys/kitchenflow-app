@@ -9,6 +9,7 @@ import PhotoScanModal from "./components/PhotoScanModal";
 import { getExpiryDays, calcExpiryDate } from "./data/expiryDays";
 import { FOOD_CATEGORIES, ALL_FOODS } from "./data/foodCategories";
 
+
 function getFoodCategory(name) {
   // 1. 完全一致を優先
   const exact = ALL_FOODS.find((f) => f.name === name);
