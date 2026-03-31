@@ -250,7 +250,7 @@ export default function PhotoScanModal({ onAdd, onClose }) {
                             value={expiryDates[i] ?? ""}
                             onChange={(e) => setExpiryDates((prev) => ({ ...prev, [i]: e.target.value }))}
                             className="text-xs px-2 py-1 rounded-lg border focus:outline-none"
-                            style={{ borderColor: "#c8b99a", color: "#1c1a16", backgroundColor: "#fdf8f2", width: "130px", flexShrink: 0 }}
+                            style={{ borderColor: "#d4cbbf", color: "#1c1a16", backgroundColor: "#f4f4f4", width: "130px", flexShrink: 0 }}
                           />
                           <input
                             type="number"

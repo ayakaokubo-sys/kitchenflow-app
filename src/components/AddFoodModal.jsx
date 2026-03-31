@@ -234,8 +234,8 @@ export default function AddFoodModal({ onAdd, onClose, initialData = null, hideE
                   value={expiryDate}
                   onChange={(e) => setExpiryDate(e.target.value)}
                   required
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none text-sm"
-                  style={{ "--tw-ring-color": "#2B4721" }}
+                  className="w-full border rounded-xl px-3 py-2 focus:outline-none text-sm"
+                  style={{ borderColor: "#d4cbbf", color: "#1c1a16", backgroundColor: "#f4f4f4" }}
                 />
               </div>
             )}

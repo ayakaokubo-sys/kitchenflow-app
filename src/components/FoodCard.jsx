@@ -160,7 +160,7 @@ export default function FoodCard({
                 onKeyDown={(e) => e.key === "Enter" && handleExpirySubmit()}
                 autoFocus
                 className="border rounded-lg px-1.5 py-0.5 text-xs focus:outline-none"
-                style={{ borderColor: s.sub, color: "#1c1a16" }}
+                style={{ borderColor: "#d4cbbf", color: "#1c1a16", backgroundColor: "#f4f4f4" }}
               />
             ) : (
               <button
