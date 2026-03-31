@@ -1,25 +1,18 @@
 import { useState } from "react";
+import AddFoodModal from "./AddFoodModal";
 
 export default function ShoppingListView({
   items, onToggle, onRemove, onUpdateItem, onClearChecked, onAddItem, onAddToFridge, onAddAllCheckedToFridge,
 }) {
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newAmount, setNewAmount] = useState(1);
-  const [newUnit, setNewUnit] = useState("個");
+  const [showAddModal, setShowAddModal] = useState(false);
   const [showChecked, setShowChecked] = useState(false);
 
   const unchecked = items.filter((i) => !i.checked);
   const checked   = items.filter((i) => i.checked);
 
-  function handleAddSubmit(e) {
-    e.preventDefault();
-    if (!newName.trim()) return;
-    onAddItem({ name: newName.trim(), amount: newAmount, unit: newUnit });
-    setNewName("");
-    setNewAmount(1);
-    setNewUnit("個");
-    setShowAddForm(false);
+  function handleModalAdd({ name, quantity, unit }) {
+    onAddItem({ name, amount: quantity, unit });
+    setShowAddModal(false);
   }
 
   return (
@@ -35,7 +28,7 @@ export default function ShoppingListView({
           )}
         </p>
         <button
-          onClick={() => setShowAddForm((v) => !v)}
+          onClick={() => setShowAddModal(true)}
           className="font-semibold text-xs px-3 py-2 rounded-full flex items-center gap-1 active:scale-95 transition-all"
           style={{ backgroundColor: "#2B4721", color: "#ddf0c0" }}
         >
@@ -43,59 +36,12 @@ export default function ShoppingListView({
         </button>
       </div>
 
-      {/* 手動追加フォーム */}
-      {showAddForm && (
-        <form
-          onSubmit={handleAddSubmit}
-          className="rounded-2xl shadow-sm p-4 flex flex-col gap-3"
-          style={{ backgroundColor: "#ffffff", border: "2px solid #e8ddd0" }}
-        >
-          <p className="text-xs font-semibold" style={{ color: "#8a7a65" }}>食材を追加</p>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder="食材名"
-              autoFocus
-              className="flex-1 rounded-xl px-3 py-2 text-sm focus:outline-none border"
-              style={{ borderColor: "#d4cbbf", backgroundColor: "#f4f4f4", color: "#1c1a16" }}
-            />
-            <input
-              type="number"
-              value={newAmount}
-              onChange={(e) => setNewAmount(Number(e.target.value))}
-              min={1}
-              className="w-14 h-9 text-center font-bold text-sm rounded-xl border focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-              style={{ backgroundColor: "#f4f4f4", color: "#1c1a16", borderColor: "#d4cbbf" }}
-            />
-            <input
-              type="text"
-              value={newUnit}
-              onChange={(e) => setNewUnit(e.target.value)}
-              placeholder="単位"
-              className="w-12 h-9 text-center font-medium text-xs rounded-xl border focus:outline-none"
-              style={{ backgroundColor: "#f4f4f4", color: "#7a9a62", borderColor: "#d4cbbf" }}
-            />
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              className="flex-1 font-semibold py-2 rounded-full text-sm transition-colors"
-              style={{ backgroundColor: "#2B4721", color: "#ddf0c0" }}
-            >
-              追加
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowAddForm(false)}
-              className="px-4 py-2 rounded-xl text-sm border hover:opacity-70 transition-colors"
-              style={{ color: "#8a7a65", borderColor: "#d4cbbf" }}
-            >
-              キャンセル
-            </button>
-          </div>
-        </form>
+      {showAddModal && (
+        <AddFoodModal
+          onAdd={handleModalAdd}
+          onClose={() => setShowAddModal(false)}
+          hideExpiry
+        />
       )}
 
       {/* 未購入リスト */}

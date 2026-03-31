@@ -3,7 +3,7 @@ import { getExpiryDays, calcExpiryDate } from "../data/expiryDays";
 import { useFrequentFoods } from "../hooks/useFrequentFoods";
 import { FOOD_CATEGORIES, ALL_FOODS } from "../data/foodCategories";
 
-export default function AddFoodModal({ onAdd, onClose, initialData = null }) {
+export default function AddFoodModal({ onAdd, onClose, initialData = null, hideExpiry = false }) {
   const [query, setQuery] = useState(initialData?.name ?? "");
   const [quantity, setQuantity] = useState(String(initialData?.amount ?? 1));
   const [unitInput, setUnitInput] = useState(initialData?.unit ?? "個");
@@ -49,7 +49,7 @@ export default function AddFoodModal({ onAdd, onClose, initialData = null }) {
   function handleSubmit(e) {
     e.preventDefault();
     const name = query.trim();
-    if (!name || !expiryDate) return;
+    if (!name || (!hideExpiry && !expiryDate)) return;
     const qty = parseInt(quantity, 10);
     const food = {
       name,
@@ -223,24 +223,26 @@ export default function AddFoodModal({ onAdd, onClose, initialData = null }) {
             </div>
 
             {/* 賞味期限 */}
-            <div>
-              <label className="text-xs font-semibold text-gray-500 mb-1 block">
-                賞味期限
-                <span className="ml-1 font-normal text-gray-400">（自動計算・編集可）</span>
-              </label>
-              <input
-                type="date"
-                value={expiryDate}
-                onChange={(e) => setExpiryDate(e.target.value)}
-                required
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none text-sm"
-                style={{ "--tw-ring-color": "#2B4721" }}
-              />
-            </div>
+            {!hideExpiry && (
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">
+                  賞味期限
+                  <span className="ml-1 font-normal text-gray-400">（自動計算・編集可）</span>
+                </label>
+                <input
+                  type="date"
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
+                  required
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none text-sm"
+                  style={{ "--tw-ring-color": "#2B4721" }}
+                />
+              </div>
+            )}
 
             <button
               type="submit"
-              disabled={!query.trim() || !expiryDate}
+              disabled={!query.trim() || (!hideExpiry && !expiryDate)}
               className="w-full font-semibold py-3 rounded-full transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed"
               style={{ backgroundColor: "#2B4721", color: "#ddf0c0" }}
             >

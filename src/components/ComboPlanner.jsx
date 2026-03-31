@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CATEGORIES, pickRecipes, getIngredientsToBuy, getRecipeUrl } from "../data/beerRecipeUtils";
 import { ALL_FOODS } from "../data/foodCategories";
+import { generateRecipeImage } from "../api/geminiRecipeImageApi";
 
 const CATEGORY_EMOJI = {
   主食: "🍚",
@@ -196,7 +197,7 @@ export default function ComboPlanner({
           style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch", alignItems: "stretch" }}
         >
           {displayItems.map((recipe) => (
-            <div key={recipe.id} style={{ width: "230px", flexShrink: 0, display: "flex" }}>
+            <div key={recipe.id} style={{ width: "230px", flexShrink: 0, display: "flex", height: "300px" }}>
               <RecipeCard
                 recipe={recipe}
                 fridgeItems={fridgeItems}
@@ -213,6 +214,17 @@ export default function ComboPlanner({
 }
 
 function RecipeCard({ recipe, fridgeItems, alreadyAdded, onAdd }) {
+  const [imgUrl, setImgUrl] = useState(null);
+  const [imgLoading, setImgLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    generateRecipeImage(recipe.name).then((url) => {
+      if (!cancelled) { setImgUrl(url); setImgLoading(false); }
+    });
+    return () => { cancelled = true; };
+  }, [recipe.name]);
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -238,9 +250,26 @@ function RecipeCard({ recipe, fridgeItems, alreadyAdded, onAdd }) {
         border: alreadyAdded ? "2px solid #2B4721" : "2px solid #e8ddd0",
       }}
     >
+      {/* 料理画像エリア */}
+      <div className="relative flex-shrink-0 overflow-hidden" style={{ height: "120px" }}>
+        {imgUrl ? (
+          <img src={imgUrl} alt={recipe.name} className="w-full h-full object-cover" />
+        ) : (
+          <div
+            className="w-full h-full flex items-center justify-center text-3xl"
+            style={{
+              background: imgLoading
+                ? "linear-gradient(135deg, #e8ddd0 0%, #d8cfc4 100%)"
+                : "linear-gradient(135deg, #dff0c0 0%, #c8e0a0 100%)",
+            }}
+          >
+            {imgLoading ? "" : "🍽️"}
+          </div>
+        )}
+      </div>
+
       <div className="p-3 flex flex-col gap-2 flex-1">
         <h4 className="font-semibold text-sm leading-snug" style={{ color: "#1c1a16" }}>{recipe.name}</h4>
-        <p className="text-sm leading-relaxed" style={{ color: "#6a5a4a" }}>{recipe.description}</p>
 
         {/* 食材タグ */}
         {(matchedFridge.length > 0 || toBuy.length > 0) && (
