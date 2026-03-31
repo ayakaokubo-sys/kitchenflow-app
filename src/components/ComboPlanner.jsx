@@ -243,7 +243,12 @@ export default function ComboPlanner({
       </div>
 
       {/* レシピカード（横スクロール・全幅・無限） */}
-      {displayItems.length > 0 ? (
+      {consumeFirst && displayItems.length === 0 ? (
+        <div className="rounded-2xl px-4 py-4 text-sm text-center" style={{ backgroundColor: "#ffffff", color: "#9a8a78" }}>
+          <p>🧊 冷蔵庫の食材を使えるレシピが見つかりませんでした</p>
+          <p className="text-xs mt-1" style={{ color: "#b0a090" }}>食材を登録するか、消費優先をオフにしてください</p>
+        </div>
+      ) : displayItems.length > 0 ? (
         <div
           className="flex gap-3 overflow-x-auto pb-2"
           style={{

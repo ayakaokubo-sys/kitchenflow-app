@@ -134,9 +134,9 @@ export function pickRecipes(category, fridgeItems, excludedIds = [], count = 8, 
   if (consumeFirst) {
     const scored = pool.map((r) => ({ ...r, _score: scoreRecipe(r, fridgeItems) }));
     const matched = scored.filter((r) => r._score > 0);
-    const source = matched.length > 0 ? matched : scored;
-    source.sort((a, b) => b._score - a._score || Math.random() - 0.5);
-    return source.slice(0, count);
+    // フォールバックなし：冷蔵庫食材を使うレシピのみ返す
+    matched.sort((a, b) => b._score - a._score || Math.random() - 0.5);
+    return matched.slice(0, count);
   }
 
   // OFFモード: ランダム
