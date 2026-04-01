@@ -51,29 +51,30 @@ const NORMALIZE_MAP = {
 };
 
 /**
- * 食材名を汎用キーワードに正規化する
+ * 冷蔵庫の食材名を汎用キーワードに正規化する（一方向のみ）
+ * 例: 「鶏むね肉」→「鶏肉」、「しめじ」→「きのこ」
  */
-function normalize(name) {
-  // 完全一致を試みる
+function normalizeFridge(name) {
   if (NORMALIZE_MAP[name]) return NORMALIZE_MAP[name];
-  // 前方一致（例: 「鶏むね肉（皮なし）」→ 「鶏むね肉」）
+  // 前方一致（例:「鶏むね肉（皮なし）」→「鶏むね肉」→「鶏肉」）
   for (const [key, val] of Object.entries(NORMALIZE_MAP)) {
-    if (name.startsWith(key) || key.startsWith(name)) return val;
+    if (name.startsWith(key)) return val;
   }
   return name;
 }
 
 /**
  * 冷蔵庫の食材名とレシピキーワードが一致するか判定
- * 正規化マップを使って「鶏むね肉」と「鶏肉」なども一致させる
+ * 冷蔵庫側のみ正規化することで「しめじ→きのこ」は一致するが
+ * 「しめじ→エリンギ」のような異なる具体名同士の誤マッチを防ぐ
  */
 function matchIngredient(fridgeName, keyword) {
+  // 直接一致（部分一致含む）
   if (fridgeName.includes(keyword) || keyword.includes(fridgeName)) return true;
-  const nFridge = normalize(fridgeName);
-  const nKeyword = normalize(keyword);
-  if (nFridge === nKeyword) return true;
+  // 冷蔵庫側の食材名を汎用名に変換してキーワードと比較
+  const nFridge = normalizeFridge(fridgeName);
+  if (nFridge === keyword) return true;
   if (nFridge.includes(keyword) || keyword.includes(nFridge)) return true;
-  if (fridgeName.includes(nKeyword) || nKeyword.includes(fridgeName)) return true;
   return false;
 }
 
